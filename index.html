@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curso Integral de Redes - Tradicionales y Emergentes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__content">
+                <h1 class="header__title">🌐 Curso Integral de Redes</h1>
+                <div class="header__controls">
+                    <input type="text" id="searchInput" class="form-control search-input" placeholder="Buscar contenido...">
+                    <button class="btn btn--secondary" id="glossaryBtn">📚 Glosario</button>
+                    <button class="btn btn--outline" id="compareBtn">⚖️ Comparar</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <!-- Track Selector -->
+                <div class="track-selector">
+                    <button class="track-btn active" data-track="traditional">
+                        <span class="track-icon">🔧</span>
+                        <span class="track-text">Redes Tradicionales</span>
+                    </button>
+                    <button class="track-btn" data-track="emergent">
+                        <span class="track-icon">🚀</span>
+                        <span class="track-text">Redes Emergentes</span>
+                    </button>
+                </div>
+
+                <!-- Navigation Content -->
+                <nav class="navigation">
+                    <!-- Traditional Networks Navigation -->
+                    <div id="traditionalNav" class="nav-track active">
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <button class="nav-button" data-module="1">
+                                    <span class="nav-icon">🔧</span>
+                                    <span class="nav-text">1. Introducción al Enrutamiento</span>
+                                    <span class="nav-arrow">▶</span>
+                                </button>
+                                <ul class="subnav hidden">
+                                    <li><a href="#" data-topic="1-1">Características de un router</a></li>
+                                    <li><a href="#" data-topic="1-2">Configuración y direccionamiento</a></li>
+                                    <li><a href="#" data-topic="1-3">Construcción tabla enrutamiento</a></li>
+                                    <li><a href="#" data-topic="1-4">Determinación de la ruta</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-button" data-module="2">
+                                    <span class="nav-icon">🛣️</span>
+                                    <span class="nav-text">2. Enrutamiento Estático/Dinámico</span>
+                                    <span class="nav-arrow">▶</span>
+                                </button>
+                                <ul class="subnav hidden">
+                                    <li><a href="#" data-topic="2-1">Routers en redes</a></li>
+                                    <li><a href="#" data-topic="2-2">Redes conectadas directamente</a></li>
+                                    <li><a href="#" data-topic="2-3">Rutas estáticas</a></li>
+                                    <li><a href="#" data-topic="2-4">Protocolos dinámicos</a></li>
+                                    <li><a href="#" data-topic="2-5">Métricas</a></li>
+                                    <li><a href="#" data-topic="2-6">Distancias administrativas</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-button" data-module="3">
+                                    <span class="nav-icon">📏</span>
+                                    <span class="nav-text">3. Protocolos Vector Distancia</span>
+                                    <span class="nav-arrow">▶</span>
+                                </button>
+                                <ul class="subnav hidden">
+                                    <li><a href="#" data-topic="3-1">Introducción vector distancia</a></li>
+                                    <li><a href="#" data-topic="3-2">Mantenimiento de tablas</a></li>
+                                    <li><a href="#" data-topic="3-3">Routing loops</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-button" data-module="4">
+                                    <span class="nav-icon">⚙️</span>
+                                    <span class="nav-text">4. Configuración Vector Distancia</span>
+                                    <span class="nav-arrow">▶</span>
+                                </button>
+                                <ul class="subnav hidden">
+                                    <li><a href="#" data-topic="4-1">RIPv1</a></li>
+                                    <li><a href="#" data-topic="4-2">VLSM</a></li>
+                                    <li><a href="#" data-topic="4-3">CIDR</a></li>
+                                    <li><a href="#" data-topic="4-4">RIPv2</a></li>
+                                    <li><a href="#" data-topic="4-5">Solución de problemas</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-button" data-module="5">
+                                    <span class="nav-icon">🗂️</span>
+                                    <span class="nav-text">5. Tabla Enrutamiento y EIGRP</span>
+                                    <span class="nav-arrow">▶</span>
+                                </button>
+                                <ul class="subnav hidden">
+                                    <li><a href="#" data-topic="5-1">Estructura de la tabla</a></li>
+                                    <li><a href="#" data-topic="5-2">Proceso de búsqueda</a></li>
+                                    <li><a href="#" data-topic="5-3">Introducción a EIGRP</a></li>
+                                    <li><a href="#" data-topic="5-4">Configuración EIGRP</a></li>
+                                    <li><a href="#" data-topic="5-5">Métrica EIGRP</a></li>
+                                    <li><a href="#" data-topic="5-6">DUAL</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-button" data-module="6">
+                                    <span class="nav-icon">🌐</span>
+                                    <span class="nav-text">6. Protocolo OSPF</span>
+                                    <span class="nav-arrow">▶</span>
+                                </button>
+                                <ul class="subnav hidden">
+                                    <li><a href="#" data-topic="6-1">Introducción OSPF</a></li>
+                                    <li><a href="#" data-topic="6-2">Métricas</a></li>
+                                    <li><a href="#" data-topic="6-3">Redes de accesos múltiples</a></li>
+                                    <li><a href="#" data-topic="6-4">DR/BDR</a></li>
+                                    <li><a href="#" data-topic="6-5">Configuración OSPF</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Emergent Networks Navigation -->
+                    <div id="emergentNav" class="nav-track hidden">
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <button class="nav-button" data-module="7">
+                                    <span class="nav-icon">🚀</span>
+                                    <span class="nav-text">7. Fundamentos Redes Emergentes</span>
+                                    <span class="nav-arrow">▶</span>
+                                </button>
+                                <ul class="subnav hidden">
+                                    <li><a href="#" data-topic="7-1">Antecedentes e impacto</a></li>
+                                    <li><a href="#" data-topic="7-2">Tecnologías cliente ligero</a></li>
+                                    <li><a href="#" data-topic="7-3">Tecnología inalámbrica</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-button" data-module="8">
+                                    <span class="nav-icon">🌐</span>
+                                    <span class="nav-text">8. Redes VLAN</span>
+                                    <span class="nav-arrow">▶</span>
+                                </button>
+                                <ul class="subnav hidden">
+                                    <li><a href="#" data-topic="8-1">Tipos VLAN</a></li>
+                                    <li><a href="#" data-topic="8-2">Protocolos de enlace VLAN</a></li>
+                                    <li><a href="#" data-topic="8-3">Enrutamiento inter-VLAN</a></li>
+                                    <li><a href="#" data-topic="8-4">Resolución de problemas</a></li>
+                                    <li><a href="#" data-topic="8-5">Seguridad en VLAN</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-button" data-module="9">
+                                    <span class="nav-icon">📱</span>
+                                    <span class="nav-text">9. Redes Móviles</span>
+                                    <span class="nav-arrow">▶</span>
+                                </button>
+                                <ul class="subnav hidden">
+                                    <li><a href="#" data-topic="9-1">Contexto comunicaciones móviles</a></li>
+                                    <li><a href="#" data-topic="9-2">Redes móviles en sociedad</a></li>
+                                    <li><a href="#" data-topic="9-3">Espectro y estándares</a></li>
+                                    <li><a href="#" data-topic="9-4">Tecnología y aplicaciones</a></li>
+                                    <li><a href="#" data-topic="9-5">Integración heterogénea</a></li>
+                                    <li><a href="#" data-topic="9-6">Servicios personalizados</a></li>
+                                    <li><a href="#" data-topic="9-7">Seguridad móvil</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-button" data-module="10">
+                                    <span class="nav-icon">📡</span>
+                                    <span class="nav-text">10. Redes Inalámbricas</span>
+                                    <span class="nav-arrow">▶</span>
+                                </button>
+                                <ul class="subnav hidden">
+                                    <li><a href="#" data-topic="10-1">Introducción inalámbricas</a></li>
+                                    <li><a href="#" data-topic="10-2">Estándares inalámbricos</a></li>
+                                    <li><a href="#" data-topic="10-3">Seguridad inalámbrica</a></li>
+                                    <li><a href="#" data-topic="10-4">Componentes red inalámbrica</a></li>
+                                    <li><a href="#" data-topic="10-5">Configuración acceso</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-button" data-module="11">
+                                    <span class="nav-icon">☎️</span>
+                                    <span class="nav-text">11. Red VoIP</span>
+                                    <span class="nav-arrow">▶</span>
+                                </button>
+                                <ul class="subnav hidden">
+                                    <li><a href="#" data-topic="11-1">Introducción telefonía IP</a></li>
+                                    <li><a href="#" data-topic="11-2">Evolución tecnológica</a></li>
+                                    <li><a href="#" data-topic="11-3">Digitalización de la voz</a></li>
+                                    <li><a href="#" data-topic="11-4">Transporte tiempo real</a></li>
+                                    <li><a href="#" data-topic="11-5">Estándares VoIP</a></li>
+                                    <li><a href="#" data-topic="11-6">Esquema transmisión</a></li>
+                                    <li><a href="#" data-topic="11-7">Interconexión redes</a></li>
+                                    <li><a href="#" data-topic="11-8">Seguridad VoIP</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <!-- Tools Section -->
+                <div class="tools-section">
+                    <h3>🛠️ Herramientas</h3>
+                    <div class="tools-traditional">
+                        <button class="btn btn--primary btn--full-width mb-8" id="subnetCalcBtn">Calculadora VLSM</button>
+                        <button class="btn btn--secondary btn--full-width mb-8" id="routingSimBtn">Simulador Enrutamiento</button>
+                    </div>
+                    <div class="tools-emergent hidden">
+                        <button class="btn btn--primary btn--full-width mb-8" id="voipCalcBtn">Calculadora VoIP</button>
+                        <button class="btn btn--secondary btn--full-width mb-8" id="wifiCompBtn">Comparador WiFi</button>
+                        <button class="btn btn--outline btn--full-width mb-8" id="vlanSimBtn">Simulador VLAN</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Content Area -->
+            <section class="content-area">
+                <!-- Breadcrumb -->
+                <div class="breadcrumb">
+                    <span id="breadcrumbContent">Inicio</span>
+                </div>
+
+                <div class="content-container">
+                    <!-- Welcome Screen -->
+                    <div id="welcomeContent" class="content-section">
+                        <div class="welcome-card card">
+                            <div class="card__body">
+                                <h2>Bienvenido al Curso Integral de Redes</h2>
+                                <p class="intro-text">Este curso interactivo combina los fundamentos tradicionales de redes con las tecnologías emergentes más avanzadas. Aprende desde conceptos básicos de enrutamiento hasta VoIP, redes móviles y tecnologías inalámbricas.</p>
+                                
+                                <div class="course-tracks">
+                                    <div class="track-card" data-track="traditional">
+                                        <div class="track-header">
+                                            <span class="track-icon-big">🔧</span>
+                                            <h3>Redes Tradicionales</h3>
+                                        </div>
+                                        <p>Fundamentos de enrutamiento, protocolos clásicos como RIP, EIGRP y OSPF, configuración de routers.</p>
+                                        <ul class="track-features">
+                                            <li>✓ 6 módulos especializados</li>
+                                            <li>✓ Comandos Cisco</li>
+                                            <li>✓ Simuladores de enrutamiento</li>
+                                            <li>✓ Calculadoras de subnetting</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="track-card" data-track="emergent">
+                                        <div class="track-header">
+                                            <span class="track-icon-big">🚀</span>
+                                            <h3>Redes Emergentes</h3>
+                                        </div>
+                                        <p>Tecnologías avanzadas: VLANs, redes móviles, inalámbricas, VoIP y sistemas de última generación.</p>
+                                        <ul class="track-features">
+                                            <li>✓ 5 módulos innovadores</li>
+                                            <li>✓ Estándares WiFi 6</li>
+                                            <li>✓ Tecnologías 5G</li>
+                                            <li>✓ Calculadoras VoIP</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="progress-overview">
+                                    <h3>📊 Progreso General del Curso</h3>
+                                    <div class="progress-summary">
+                                        <div class="progress-track">
+                                            <h4>Redes Tradicionales</h4>
+                                            <div class="progress-bar-large">
+                                                <div class="progress-fill-large" id="traditionalProgress" style="width: 0%"></div>
+                                            </div>
+                                            <span class="progress-text">0% completado</span>
+                                        </div>
+                                        <div class="progress-track">
+                                            <h4>Redes Emergentes</h4>
+                                            <div class="progress-bar-large">
+                                                <div class="progress-fill-large" id="emergentProgress" style="width: 0%"></div>
+                                            </div>
+                                            <span class="progress-text">0% completado</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="quick-actions">
+                                    <h3>🚀 Acciones Rápidas</h3>
+                                    <div class="action-buttons">
+                                        <button class="btn btn--primary" onclick="app.startTrack('traditional')">Comenzar Redes Tradicionales</button>
+                                        <button class="btn btn--primary" onclick="app.startTrack('emergent')">Comenzar Redes Emergentes</button>
+                                        <button class="btn btn--secondary" onclick="app.showComparison()">Comparar Tecnologías</button>
+                                        <button class="btn btn--outline" onclick="app.showModal('glossaryModal')">Ver Glosario</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Content Area -->
+                    <div id="dynamicContent" class="content-section hidden">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+
+                    <!-- Quiz Section -->
+                    <div id="quizSection" class="content-section hidden">
+                        <div class="quiz-container card">
+                            <div class="card__body">
+                                <h2 id="quizTitle">Quiz - Módulo</h2>
+                                <div id="quizContent">
+                                    <!-- Quiz content will be generated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Section -->
+                    <div id="comparisonSection" class="content-section hidden">
+                        <div class="comparison-container card">
+                            <div class="card__body">
+                                <h2>⚖️ Comparación de Tecnologías</h2>
+                                <div id="comparisonContent">
+                                    <!-- Comparison content will be generated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modals -->
+        <!-- Subnet Calculator Modal -->
+        <div id="subnetModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🧮 Calculadora VLSM/Subnetting</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Tabs para diferentes modos -->
+                    <div class="vlsm-tabs">
+                        <button class="vlsm-tab active" data-tab="simple">Cálculo Simple</button>
+                        <button class="vlsm-tab" data-tab="vlsm">VLSM Automático</button>
+                        <button class="vlsm-tab" data-tab="custom">Subredes Personalizadas</button>
+                    </div>
+
+                    <!-- Modo Simple -->
+                    <div id="simpleMode" class="vlsm-mode active">
+                        <div class="form-group">
+                            <label class="form-label">Dirección IP de Red:</label>
+                            <input type="text" id="networkIP" class="form-control" placeholder="192.168.1.0" value="192.168.1.0">
+                            <small class="form-help">Formato: x.x.x.x (ej: 192.168.1.0)</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Máscara de Subred:</label>
+                            <select id="subnetMask" class="form-control">
+                                <option value="8">/8 (255.0.0.0)</option>
+                                <option value="16">/16 (255.255.0.0)</option>
+                                <option value="24" selected>/24 (255.255.255.0)</option>
+                                <option value="25">/25 (255.255.255.128)</option>
+                                <option value="26">/26 (255.255.255.192)</option>
+                                <option value="27">/27 (255.255.255.224)</option>
+                                <option value="28">/28 (255.255.255.240)</option>
+                                <option value="29">/29 (255.255.255.248)</option>
+                                <option value="30">/30 (255.255.255.252)</option>
+                            </select>
+                        </div>
+                        <button class="btn btn--primary" id="calculateSubnet">Calcular Subred</button>
+                    </div>
+
+                    <!-- Modo VLSM Automático -->
+                    <div id="vlsmMode" class="vlsm-mode hidden">
+                        <div class="form-group">
+                            <label class="form-label">Red Principal:</label>
+                            <input type="text" id="vlsmNetwork" class="form-control" placeholder="192.168.1.0/24" value="192.168.1.0/24">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Requerimientos de Hosts (separados por comas):</label>
+                            <input type="text" id="hostRequirements" class="form-control" placeholder="100, 50, 25, 10" value="100, 50, 25, 10">
+                            <small class="form-help">Ingresa el número de hosts necesarios para cada subred</small>
+                        </div>
+                        <button class="btn btn--primary" id="calculateVLSM">Calcular VLSM</button>
+                    </div>
+
+                    <!-- Modo Personalizado -->
+                    <div id="customMode" class="vlsm-mode hidden">
+                        <div class="form-group">
+                            <label class="form-label">Red Base:</label>
+                            <input type="text" id="customNetwork" class="form-control" placeholder="10.0.0.0/16" value="10.0.0.0/16">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Número de Subredes:</label>
+                            <input type="number" id="numSubnets" class="form-control" min="2" max="256" value="4">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bits de Subred:</label>
+                            <input type="number" id="subnetBits" class="form-control" min="1" max="16" value="2">
+                        </div>
+                        <button class="btn btn--primary" id="calculateCustom">Generar Subredes</button>
+                    </div>
+
+                    <!-- Resultados -->
+                    <div id="subnetResults" class="subnet-results hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VoIP Calculator Modal -->
+        <div id="voipModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>☎️ Calculadora VoIP</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Códec:</label>
+                        <select id="codecSelect" class="form-control">
+                            <option value="g711">G.711 (64 kbps)</option>
+                            <option value="g729">G.729 (8 kbps)</option>
+                            <option value="g723">G.723.1 (5.3/6.3 kbps)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Número de llamadas simultáneas:</label>
+                        <input type="number" id="numCalls" class="form-control" value="10" min="1" max="1000">
+                    </div>
+                    <button class="btn btn--primary" id="calculateVoip">Calcular Ancho de Banda</button>
+                    <div id="voipResults" class="voip-results hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WiFi Comparator Modal -->
+        <div id="wifiModal" class="modal hidden">
+            <div class="modal-content modal-content--large">
+                <div class="modal-header">
+                    <h3>📡 Comparador de Estándares WiFi</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="wifiComparison"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Glossary Modal -->
+        <div id="glossaryModal" class="modal hidden">
+            <div class="modal-content modal-content--large">
+                <div class="modal-header">
+                    <h3>📚 Glosario Técnico</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="glossary-search">
+                        <input type="text" id="glossarySearch" class="form-control" placeholder="Buscar término...">
+                    </div>
+                    <div id="glossaryContent" class="glossary-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

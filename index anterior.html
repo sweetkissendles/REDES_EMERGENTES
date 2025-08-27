@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redes de Computadora - Enrutamiento Interactivo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header__content">
+                <h1 class="header__title">📡 Redes de Computadora</h1>
+                <div class="header__controls">
+                    <input type="text" id="searchInput" class="form-control search-input" placeholder="Buscar contenido...">
+                    <button class="btn btn--secondary" id="glossaryBtn">📚 Glosario</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="navigation">
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <button class="nav-button" data-module="1">
+                                <span class="nav-icon">🔧</span>
+                                <span class="nav-text">1. Introducción al Enrutamiento</span>
+                                <span class="nav-arrow">▶</span>
+                            </button>
+                            <ul class="subnav hidden">
+                                <li><a href="#" data-topic="1-1">Características de un router</a></li>
+                                <li><a href="#" data-topic="1-2">Configuración y direccionamiento</a></li>
+                                <li><a href="#" data-topic="1-3">Construcción de la tabla</a></li>
+                                <li><a href="#" data-topic="1-4">Determinación de la ruta</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-button" data-module="2">
+                                <span class="nav-icon">🔄</span>
+                                <span class="nav-text">2. Enrutamiento Estático y Dinámico</span>
+                                <span class="nav-arrow">▶</span>
+                            </button>
+                            <ul class="subnav hidden">
+                                <li><a href="#" data-topic="2-1">Enrutamiento Estático</a></li>
+                                <li><a href="#" data-topic="2-2">Enrutamiento Dinámico</a></li>
+                                <li><a href="#" data-topic="2-3">Métricas</a></li>
+                                <li><a href="#" data-topic="2-4">Distancias Administrativas</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-button" data-module="3">
+                                <span class="nav-icon">📏</span>
+                                <span class="nav-text">3. Protocolos Vector Distancia</span>
+                                <span class="nav-arrow">▶</span>
+                            </button>
+                            <ul class="subnav hidden">
+                                <li><a href="#" data-topic="3-1">Concepto Vector Distancia</a></li>
+                                <li><a href="#" data-topic="3-2">Mantenimiento de Tablas</a></li>
+                                <li><a href="#" data-topic="3-3">Routing Loops</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-button" data-module="4">
+                                <span class="nav-icon">⚙️</span>
+                                <span class="nav-text">4. Configuración Vector Distancia</span>
+                                <span class="nav-arrow">▶</span>
+                            </button>
+                            <ul class="subnav hidden">
+                                <li><a href="#" data-topic="4-1">RIPv1</a></li>
+                                <li><a href="#" data-topic="4-2">RIPv2</a></li>
+                                <li><a href="#" data-topic="4-3">VLSM</a></li>
+                                <li><a href="#" data-topic="4-4">CIDR</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-button" data-module="5">
+                                <span class="nav-icon">🗂️</span>
+                                <span class="nav-text">5. Tabla de Enrutamiento y EIGRP</span>
+                                <span class="nav-arrow">▶</span>
+                            </button>
+                            <ul class="subnav hidden">
+                                <li><a href="#" data-topic="5-1">Estructura de la Tabla</a></li>
+                                <li><a href="#" data-topic="5-2">Proceso de Búsqueda</a></li>
+                                <li><a href="#" data-topic="5-3">Introducción a EIGRP</a></li>
+                                <li><a href="#" data-topic="5-4">Métrica EIGRP</a></li>
+                                <li><a href="#" data-topic="5-5">Algoritmo DUAL</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-button" data-module="6">
+                                <span class="nav-icon">🌐</span>
+                                <span class="nav-text">6. Protocolo OSPF</span>
+                                <span class="nav-arrow">▶</span>
+                            </button>
+                            <ul class="subnav hidden">
+                                <li><a href="#" data-topic="6-1">Introducción OSPF</a></li>
+                                <li><a href="#" data-topic="6-2">Métricas OSPF</a></li>
+                                <li><a href="#" data-topic="6-3">Redes Multiacceso</a></li>
+                                <li><a href="#" data-topic="6-4">DR/BDR Election</a></li>
+                                <li><a href="#" data-topic="6-5">Configuración OSPF</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Tools Section -->
+                <div class="tools-section">
+                    <h3>🛠️ Herramientas</h3>
+                    <button class="btn btn--primary btn--full-width mb-8" id="subnetCalcBtn">Calculadora de Subnetting</button>
+                    <button class="btn btn--secondary btn--full-width" id="simulatorBtn">Simulador de Enrutamiento</button>
+                </div>
+            </aside>
+
+            <!-- Content Area -->
+            <section class="content-area">
+                <div class="content-container">
+                    <!-- Welcome Screen -->
+                    <div id="welcomeContent" class="content-section">
+                        <div class="welcome-card card">
+                            <div class="card__body">
+                                <h2>Bienvenido al Curso de Redes de Computadora</h2>
+                                <p class="intro-text">Este curso interactivo te guiará a través de los conceptos fundamentales del enrutamiento de redes, desde los principios básicos hasta protocolos avanzados como EIGRP y OSPF.</p>
+                                
+                                <div class="feature-grid">
+                                    <div class="feature-item">
+                                        <div class="feature-icon">📖</div>
+                                        <h4>Contenido Teórico</h4>
+                                        <p>Explicaciones detalladas de cada concepto</p>
+                                    </div>
+                                    <div class="feature-item">
+                                        <div class="feature-icon">⚡</div>
+                                        <h4>Ejemplos Prácticos</h4>
+                                        <p>Comandos y configuraciones reales</p>
+                                    </div>
+                                    <div class="feature-item">
+                                        <div class="feature-icon">🧮</div>
+                                        <h4>Herramientas</h4>
+                                        <p>Calculadoras y simuladores integrados</p>
+                                    </div>
+                                    <div class="feature-item">
+                                        <div class="feature-icon">📋</div>
+                                        <h4>Evaluaciones</h4>
+                                        <p>Quiz interactivos para cada módulo</p>
+                                    </div>
+                                </div>
+
+                                <div class="progress-overview">
+                                    <h3>Progreso del Curso</h3>
+                                    <div class="progress-modules">
+                                        <div class="progress-item" data-module="1">
+                                            <span class="progress-number">1</span>
+                                            <span class="progress-title">Introducción</span>
+                                            <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+                                        </div>
+                                        <div class="progress-item" data-module="2">
+                                            <span class="progress-number">2</span>
+                                            <span class="progress-title">Estático/Dinámico</span>
+                                            <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+                                        </div>
+                                        <div class="progress-item" data-module="3">
+                                            <span class="progress-number">3</span>
+                                            <span class="progress-title">Vector Distancia</span>
+                                            <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+                                        </div>
+                                        <div class="progress-item" data-module="4">
+                                            <span class="progress-number">4</span>
+                                            <span class="progress-title">Configuración</span>
+                                            <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+                                        </div>
+                                        <div class="progress-item" data-module="5">
+                                            <span class="progress-number">5</span>
+                                            <span class="progress-title">EIGRP</span>
+                                            <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+                                        </div>
+                                        <div class="progress-item" data-module="6">
+                                            <span class="progress-number">6</span>
+                                            <span class="progress-title">OSPF</span>
+                                            <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Content Area -->
+                    <div id="dynamicContent" class="content-section hidden">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+
+                    <!-- Quiz Section -->
+                    <div id="quizSection" class="content-section hidden">
+                        <div class="quiz-container card">
+                            <div class="card__body">
+                                <h2 id="quizTitle">Quiz - Módulo</h2>
+                                <div id="quizContent">
+                                    <!-- Quiz content will be generated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modals -->
+        <!-- Subnet Calculator Modal -->
+        <div id="subnetModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🧮 Calculadora de Subnetting</h3>
+                    <button class="modal-close" id="subnetModalClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Dirección IP de Red:</label>
+                        <input type="text" id="networkIP" class="form-control" placeholder="192.168.1.0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Máscara de Subred:</label>
+                        <select id="subnetMask" class="form-control">
+                            <option value="24">/24 (255.255.255.0)</option>
+                            <option value="25">/25 (255.255.255.128)</option>
+                            <option value="26">/26 (255.255.255.192)</option>
+                            <option value="27">/27 (255.255.255.224)</option>
+                            <option value="28">/28 (255.255.255.240)</option>
+                            <option value="29">/29 (255.255.255.248)</option>
+                            <option value="30">/30 (255.255.255.252)</option>
+                        </select>
+                    </div>
+                    <button class="btn btn--primary" id="calculateSubnet">Calcular</button>
+                    <div id="subnetResults" class="subnet-results"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Glossary Modal -->
+        <div id="glossaryModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📚 Glosario de Términos</h3>
+                    <button class="modal-close" id="glossaryModalClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="glossary-content">
+                        <div class="glossary-item">
+                            <strong>Router:</strong> Dispositivo de red que opera en la Capa 3 (Red) del modelo OSI.
+                        </div>
+                        <div class="glossary-item">
+                            <strong>RIP:</strong> Routing Information Protocol - Protocolo de enrutamiento por vector distancia.
+                        </div>
+                        <div class="glossary-item">
+                            <strong>EIGRP:</strong> Enhanced Interior Gateway Routing Protocol - Protocolo híbrido de Cisco.
+                        </div>
+                        <div class="glossary-item">
+                            <strong>OSPF:</strong> Open Shortest Path First - Protocolo de estado de enlace.
+                        </div>
+                        <div class="glossary-item">
+                            <strong>VLSM:</strong> Variable Length Subnet Mask - Máscaras de subred de longitud variable.
+                        </div>
+                        <div class="glossary-item">
+                            <strong>CIDR:</strong> Classless Inter-Domain Routing - Enrutamiento sin clases.
+                        </div>
+                        <div class="glossary-item">
+                            <strong>LSA:</strong> Link State Advertisement - Anuncio de estado de enlace.
+                        </div>
+                        <div class="glossary-item">
+                            <strong>DR/BDR:</strong> Designated Router / Backup Designated Router.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
