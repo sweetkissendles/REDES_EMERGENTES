@@ -10,10 +10,8 @@ Hola Soy Lia, una mujer transgénero de 22 años apasionada por la tecnología y
 
 **💻 Tecnología & Desarrollo**
 - Telecomunicaciones y redes de computadora
-- Desarrollo web full-stack
 - Paradigmas de programación
 - Gadgets y hardware de última generación
-- Emprendimiento en el sector tech
 
 **🎮 Entretenimiento & Gaming**
 - Anime y manga (siempre buscando nuevas series)
@@ -120,8 +118,7 @@ Si eres estudiante, profesional, o simplemente alguien curioso sobre redes, espe
 
 - 💼 **Twitter**: [https://x.com/sweetkissendles]
 - 🐱 **GitHub**: [sweetkissendles]
-- 🎮 **Gaming**: Genshin Impact UID: ]
-- 📧 **Email**: [Chakamaxochitl@outlook.com]
+- 🎮 **Gaming**: Genshin Impact UID: []
 
 ---
 
