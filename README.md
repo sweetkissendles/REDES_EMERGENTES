@@ -2,9 +2,9 @@
 
 > *Un proyecto educativo completo sobre redes tradicionales y emergentes*
 
-## 👋 Sobre Mí - Lia 🏳️‍⚧️
+##  Sobre Mí - Lia 🏳️‍⚧️
 
-¡Hola! Soy Lia, una mujer transgénero de 22 años apasionada por la tecnología y en constante búsqueda de conocimiento. Mi mundo gira en torno a las telecomunicaciones, el desarrollo web y las últimas innovaciones tecnológicas de empresas como **Huawei**, **Samsung** y **Nvidia**.
+Hola Soy Lia, una mujer transgénero de 22 años apasionada por la tecnología y en constante búsqueda de conocimiento. Mi mundo gira en torno a las telecomunicaciones, el desarrollo web y las últimas innovaciones tecnológicas de empresas como **Huawei**, **Samsung** y **Nvidia**.
 
 ### 🚀 Mis Pasiones
 
