@@ -1624,16 +1624,2181 @@ class NetworkCourseApp {
     }
 
     showRoutingSimulator() {
-        alert('🔧 Simulador de Enrutamiento\n\nEsta herramienta permite simular configuraciones de enrutamiento y visualizar el comportamiento de protocolos como RIP, EIGRP y OSPF.\n\n¡Próximamente disponible!');
+        this.showModal('routingSimModal');
+        this.initRoutingSimulator();
     }
 
     showVlanSimulator() {
-        alert('🌐 Simulador VLAN\n\nEsta herramienta permite configurar y probar diferentes topologías VLAN, incluyendo trunking y enrutamiento inter-VLAN.\n\n¡Próximamente disponible!');
+        this.showModal('vlanSimModal');
+        this.initVlanSimulator();
     }
 
-    updateBreadcrumb(text) {
-        document.getElementById('breadcrumbContent').textContent = text;
+    initRoutingSimulator() {
+        // Initialize routing simulator state
+        this.routingSimulator = {
+            devices: [],
+            links: [],
+            selectedDevice: null,
+            currentTab: 'topology',
+            protocols: {
+                static: { enabled: true, routes: [] },
+                rip: { enabled: false, version: 2 },
+                eigrp: { enabled: false, asn: 100 },
+                ospf: { enabled: false, processId: 1, area: 0 }
+            }
+        };
+        
+        this.bindRoutingSimulatorEvents();
+        this.loadSampleTopology();
     }
+
+    initVlanSimulator() {
+        // Initialize VLAN simulator state
+        this.vlanSimulator = {
+            devices: [],
+            vlans: [
+                { id: 1, name: 'default', color: '#6b7280' }
+            ],
+            trunks: [],
+            selectedDevice: null,
+            currentTab: 'vlan-topology'
+        };
+        
+        this.bindVlanSimulatorEvents();
+        this.loadVlanExample();
+    }
+
+    bindRoutingSimulatorEvents() {
+        // Tab switching
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('sim-tab') && e.target.closest('#routingSimModal')) {
+                this.switchSimulatorTab(e.target.dataset.tab, 'routing');
+            }
+        });
+
+        // Device palette with selection
+        document.querySelectorAll('#routingSimModal .device-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.selectRoutingDevice(e.target.dataset.device);
+            });
+        });
+
+        // Canvas click for device placement, linking, editing, or deleting
+        document.getElementById('topologySvg')?.addEventListener('click', (e) => {
+            if (this.routingSimulator.deleteMode) {
+                this.handleDeleteClick(e, 'routing');
+            } else if (this.routingSimulator.editMode) {
+                this.handleEditClick(e, 'routing');
+            } else if (this.routingSimulator.selectedDeviceType === 'link') {
+                this.handleLinkCreation(e, 'routing');
+            } else if (this.routingSimulator.selectedDeviceType) {
+                this.placeDevice(e, 'routing');
+            }
+        });
+
+        // Device drag functionality
+        this.enableDeviceDragging('topologySvg');
+
+        // Right-click context menu for deletion
+        document.getElementById('topologySvg')?.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            this.showContextMenu(e, 'routing');
+        });
+
+        // Topology actions
+        document.getElementById('clearTopology')?.addEventListener('click', () => {
+            this.clearTopology();
+        });
+        
+        document.getElementById('loadSampleTopology')?.addEventListener('click', () => {
+            this.loadSampleTopology();
+        });
+
+        // Delete and Edit mode buttons
+        document.getElementById('deleteMode')?.addEventListener('click', () => {
+            this.toggleDeleteMode('routing');
+        });
+        
+        document.getElementById('editMode')?.addEventListener('click', () => {
+            this.toggleEditMode('routing');
+        });
+
+        // Protocol selection with auto-update
+        document.getElementById('protocolSelect')?.addEventListener('change', () => {
+            this.updateRoutingTables();
+        });
+        
+        document.getElementById('updateTables')?.addEventListener('click', () => {
+            this.updateRoutingTables();
+        });
+
+        // Enhanced packet simulation
+        document.getElementById('sendPacket')?.addEventListener('click', () => {
+            this.simulatePacketWithAnimation();
+        });
+        
+        document.getElementById('clearSimulation')?.addEventListener('click', () => {
+            this.clearSimulationLog();
+        });
+
+        // Auto-populate source devices
+        this.updateSourceDeviceList();
+    }
+
+    bindVlanSimulatorEvents() {
+        // Tab switching for VLAN simulator
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('sim-tab') && e.target.closest('#vlanSimModal')) {
+                this.switchSimulatorTab(e.target.dataset.tab, 'vlan');
+            }
+        });
+
+        // Device palette for VLAN simulator
+        document.querySelectorAll('#vlanSimModal .device-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.selectVlanDevice(e.target.dataset.device);
+            });
+        });
+
+        // Canvas click for VLAN device placement, linking, editing, or deleting
+        document.getElementById('vlanSvg')?.addEventListener('click', (e) => {
+            if (this.vlanSimulator.deleteMode) {
+                this.handleDeleteClick(e, 'vlan');
+            } else if (this.vlanSimulator.editMode) {
+                this.handleEditClick(e, 'vlan');
+            } else if (this.vlanSimulator.selectedDeviceType === 'link') {
+                this.handleLinkCreation(e, 'vlan');
+            } else if (this.vlanSimulator.selectedDeviceType) {
+                this.placeDevice(e, 'vlan');
+            }
+        });
+
+        // Enable dragging for VLAN devices
+        this.enableDeviceDragging('vlanSvg');
+
+        // Right-click context menu for deletion
+        document.getElementById('vlanSvg')?.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            this.showContextMenu(e, 'vlan');
+        });
+
+        // VLAN creation with validation
+        document.getElementById('createVlan')?.addEventListener('click', () => {
+            this.createVlanAdvanced();
+        });
+
+        // Auto-update native VLAN selector
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'nativeVlan') {
+                this.updateTrunkConfiguration();
+            }
+        });
+
+        // VLAN actions
+        document.getElementById('clearVlanTopology')?.addEventListener('click', () => {
+            this.clearVlanTopology();
+        });
+        
+        document.getElementById('loadVlanExample')?.addEventListener('click', () => {
+            this.loadVlanExample();
+        });
+
+        // Delete and Edit mode buttons for VLAN
+        document.getElementById('deleteVlanMode')?.addEventListener('click', () => {
+            this.toggleDeleteMode('vlan');
+        });
+        
+        document.getElementById('editVlanMode')?.addEventListener('click', () => {
+            this.toggleEditMode('vlan');
+        });
+
+        // Enhanced connectivity test
+        document.getElementById('testConnectivity')?.addEventListener('click', () => {
+            this.testVlanConnectivityAdvanced();
+        });
+
+        // Auto-populate test device lists
+        this.updateVlanTestDevices();
+     }
+
+     // Link creation functionality
+     handleLinkCreation(event, simulatorType) {
+         const svg = simulatorType === 'routing' ? document.getElementById('topologySvg') : document.getElementById('vlanSvg');
+         const rect = svg.getBoundingClientRect();
+         const x = event.clientX - rect.left;
+         const y = event.clientY - rect.top;
+         
+         const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+         
+         // Find device at click position
+         const clickedDevice = simulator.devices.find(d => 
+             Math.abs(d.x - x) < 30 && Math.abs(d.y - y) < 30
+         );
+         
+         if (!clickedDevice) {
+             this.showLinkAlert('Haga clic en un dispositivo para crear el enlace', 'info');
+             return;
+         }
+         
+         if (!simulator.linkingState) {
+             // Start linking
+             simulator.linkingState = {
+                 fromDevice: clickedDevice,
+                 step: 'selectDestination'
+             };
+             this.highlightDevice(clickedDevice, svg);
+             this.showLinkAlert(`Enlace iniciado desde ${clickedDevice.id}. Seleccione el dispositivo destino.`, 'info');
+         } else {
+             // Complete linking
+             const fromDevice = simulator.linkingState.fromDevice;
+             const toDevice = clickedDevice;
+             
+             if (fromDevice.id === toDevice.id) {
+                 this.showLinkAlert('No puede crear un enlace hacia el mismo dispositivo', 'warning');
+                 return;
+             }
+             
+             // Check if link already exists
+             const existingLink = simulator.links.find(link => 
+                 (link.from === fromDevice.id && link.to === toDevice.id) ||
+                 (link.from === toDevice.id && link.to === fromDevice.id)
+             );
+             
+             if (existingLink) {
+                 this.showLinkAlert('Ya existe un enlace entre estos dispositivos', 'warning');
+                 this.clearLinkingState(simulator, svg);
+                 return;
+             }
+             
+             // Create the link
+             this.createLink(fromDevice, toDevice, simulator);
+             this.clearLinkingState(simulator, svg);
+             
+             // Redraw topology
+             if (simulatorType === 'routing') {
+                 this.drawTopology();
+             } else {
+                 this.drawVlanTopology();
+             }
+             
+             this.showLinkAlert(`Enlace creado: ${fromDevice.id} ↔ ${toDevice.id}`, 'success');
+         }
+     }
+
+     createLink(fromDevice, toDevice, simulator) {
+         const link = {
+             id: `link_${simulator.links.length + 1}`,
+             from: fromDevice.id,
+             to: toDevice.id,
+             fromInterface: this.getAvailableInterface(fromDevice),
+             toInterface: this.getAvailableInterface(toDevice),
+             status: 'up',
+             bandwidth: '100 Mbps',
+             created: new Date().toLocaleString()
+         };
+         
+         simulator.links.push(link);
+         
+         // Update device interfaces if they're routers
+         if (fromDevice.type === 'router' && toDevice.type === 'router') {
+             this.configureP2PLink(fromDevice, toDevice, link);
+         }
+     }
+
+     getAvailableInterface(device) {
+         if (device.type === 'router') {
+             const usedInterfaces = this.routingSimulator.links
+                 .filter(link => link.from === device.id || link.to === device.id)
+                 .map(link => link.from === device.id ? link.fromInterface : link.toInterface)
+                 .filter(iface => iface);
+             
+             const availableInterfaces = ['Fa0/0', 'Fa0/1', 'Fa1/0', 'Fa1/1', 'Se0/0/0', 'Se0/0/1'];
+             return availableInterfaces.find(iface => !usedInterfaces.includes(iface)) || 'Fa0/0';
+         } else if (device.type === 'switch') {
+             return 'Fa0/24'; // Trunk port
+         } else {
+             return 'Eth0';
+         }
+     }
+
+     configureP2PLink(device1, device2, link) {
+         // Configure point-to-point link with /30 subnet
+         const linkSubnets = [
+             '10.0.0.0/30', '10.0.0.4/30', '10.0.0.8/30', '10.0.0.12/30',
+             '172.16.0.0/30', '172.16.0.4/30', '192.168.100.0/30', '192.168.100.4/30'
+         ];
+         
+         const usedSubnets = this.routingSimulator.links
+             .filter(l => l.subnet)
+             .map(l => l.subnet);
+         
+         const availableSubnet = linkSubnets.find(subnet => !usedSubnets.includes(subnet));
+         
+         if (availableSubnet) {
+             const [network, prefix] = availableSubnet.split('/');
+             const networkParts = network.split('.').map(Number);
+             
+             link.subnet = availableSubnet;
+             link.ip1 = `${networkParts[0]}.${networkParts[1]}.${networkParts[2]}.${networkParts[3] + 1}`;
+             link.ip2 = `${networkParts[0]}.${networkParts[1]}.${networkParts[2]}.${networkParts[3] + 2}`;
+             
+             // Update device interfaces
+             this.updateDeviceInterface(device1, link.fromInterface, link.ip1, '255.255.255.252');
+             this.updateDeviceInterface(device2, link.toInterface, link.ip2, '255.255.255.252');
+         }
+     }
+
+     updateDeviceInterface(device, interfaceName, ip, mask) {
+         if (!device.interfaces) device.interfaces = [];
+         
+         const existingInterface = device.interfaces.find(iface => iface.name === interfaceName);
+         if (existingInterface) {
+             existingInterface.ip = ip;
+             existingInterface.mask = mask;
+         } else {
+             device.interfaces.push({
+                 name: interfaceName,
+                 ip: ip,
+                 mask: mask,
+                 status: 'up'
+             });
+         }
+     }
+
+     highlightDevice(device, svg) {
+         // Add visual highlight to selected device
+         const deviceElements = svg.querySelectorAll('g');
+         deviceElements.forEach(element => {
+             const circle = element.querySelector('circle');
+             const rect = element.querySelector('rect');
+             if (circle) {
+                 circle.setAttribute('stroke', '#ff6b6b');
+                 circle.setAttribute('stroke-width', '4');
+             }
+             if (rect) {
+                 rect.setAttribute('stroke', '#ff6b6b');
+                 rect.setAttribute('stroke-width', '4');
+             }
+         });
+     }
+
+     clearLinkingState(simulator, svg) {
+         simulator.linkingState = null;
+         
+         // Remove highlights
+         const deviceElements = svg.querySelectorAll('g');
+         deviceElements.forEach(element => {
+             const circle = element.querySelector('circle');
+             const rect = element.querySelector('rect');
+             if (circle) {
+                 circle.setAttribute('stroke', '#374151');
+                 circle.setAttribute('stroke-width', '2');
+             }
+             if (rect) {
+                 rect.setAttribute('stroke', '#374151');
+                 rect.setAttribute('stroke-width', '2');
+             }
+         });
+         
+         // Clear device selection
+         simulator.selectedDeviceType = null;
+         document.querySelectorAll('.device-btn.selected').forEach(btn => {
+             btn.classList.remove('selected');
+         });
+         
+         const canvas = document.getElementById(simulator === this.routingSimulator ? 'topologyCanvas' : 'vlanCanvas');
+         if (canvas) {
+             canvas.style.cursor = 'default';
+             canvas.title = '';
+         }
+     }
+
+     showLinkAlert(message, type) {
+         // Create temporary alert for linking
+         const alert = document.createElement('div');
+         alert.className = `link-alert link-alert--${type}`;
+         alert.textContent = message;
+         
+         const controls = document.querySelector('.topology-controls') || document.querySelector('.vlan-controls');
+         if (controls) {
+             controls.appendChild(alert);
+             
+             setTimeout(() => {
+                 if (alert.parentNode) {
+                     alert.parentNode.removeChild(alert);
+                 }
+             }, 3000);
+         }
+     }
+
+     switchSimulatorTab(tabName, simulator) {
+        const modal = simulator === 'routing' ? '#routingSimModal' : '#vlanSimModal';
+        
+        // Update tab buttons
+        document.querySelectorAll(`${modal} .sim-tab`).forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`${modal} [data-tab="${tabName}"]`).classList.add('active');
+        
+        // Update content panels
+        document.querySelectorAll(`${modal} .sim-content`).forEach(content => {
+            content.classList.add('hidden');
+            content.classList.remove('active');
+        });
+        
+        const targetContent = document.getElementById(tabName + 'Tab');
+        if (targetContent) {
+            targetContent.classList.remove('hidden');
+            targetContent.classList.add('active');
+        }
+    }
+
+    loadSampleTopology() {
+        // Create sample network topology
+        this.routingSimulator.devices = [
+            { id: 'R1', type: 'router', x: 150, y: 100, interfaces: [
+                { name: 'Fa0/0', ip: '192.168.1.1', mask: '255.255.255.0' },
+                { name: 'Fa0/1', ip: '10.0.0.1', mask: '255.255.255.252' }
+            ]},
+            { id: 'R2', type: 'router', x: 350, y: 100, interfaces: [
+                { name: 'Fa0/0', ip: '192.168.2.1', mask: '255.255.255.0' },
+                { name: 'Fa0/1', ip: '10.0.0.2', mask: '255.255.255.252' }
+            ]},
+            { id: 'PC1', type: 'pc', x: 100, y: 200, ip: '192.168.1.10', gateway: '192.168.1.1' },
+            { id: 'PC2', type: 'pc', x: 400, y: 200, ip: '192.168.2.10', gateway: '192.168.2.1' }
+        ];
+        
+        this.routingSimulator.links = [
+            { from: 'R1', to: 'PC1', fromInterface: 'Fa0/0', toInterface: 'Eth0' },
+            { from: 'R2', to: 'PC2', fromInterface: 'Fa0/0', toInterface: 'Eth0' },
+            { from: 'R1', to: 'R2', fromInterface: 'Fa0/1', toInterface: 'Fa0/1' }
+        ];
+        
+        this.drawTopology();
+        this.updateDeviceList();
+    }
+
+    loadVlanExample() {
+        // Create sample VLAN topology
+        this.vlanSimulator.devices = [
+            { id: 'SW1', type: 'switch', x: 250, y: 150, ports: [
+                { number: 1, mode: 'access', vlan: 10 },
+                { number: 2, mode: 'access', vlan: 20 },
+                { number: 3, mode: 'trunk', allowedVlans: '1,10,20,30' }
+            ]},
+            { id: 'PC1', type: 'pc', x: 150, y: 250, vlan: 10, ip: '192.168.10.10' },
+            { id: 'PC2', type: 'pc', x: 350, y: 250, vlan: 20, ip: '192.168.20.10' },
+            { id: 'R1', type: 'router', x: 250, y: 50, subinterfaces: [
+                { vlan: 10, ip: '192.168.10.1' },
+                { vlan: 20, ip: '192.168.20.1' }
+            ]}
+        ];
+        
+        this.vlanSimulator.vlans = [
+            { id: 1, name: 'default', color: '#6b7280' },
+            { id: 10, name: 'Sales', color: '#3b82f6' },
+            { id: 20, name: 'Engineering', color: '#ef4444' },
+            { id: 30, name: 'Management', color: '#10b981' }
+        ];
+        
+        this.drawVlanTopology();
+        this.updateVlanList();
+    }
+
+    drawTopology() {
+        const svg = document.getElementById('topologySvg');
+        if (!svg) return;
+        
+        svg.innerHTML = '';
+        
+        // Draw links first
+        this.routingSimulator.links.forEach(link => {
+            const fromDevice = this.routingSimulator.devices.find(d => d.id === link.from);
+            const toDevice = this.routingSimulator.devices.find(d => d.id === link.to);
+            
+            if (fromDevice && toDevice) {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('class', 'link-group');
+                
+                // Main link line
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', fromDevice.x);
+                line.setAttribute('y1', fromDevice.y);
+                line.setAttribute('x2', toDevice.x);
+                line.setAttribute('y2', toDevice.y);
+                line.setAttribute('stroke', link.status === 'up' ? '#10b981' : '#ef4444');
+                line.setAttribute('stroke-width', '3');
+                line.setAttribute('stroke-dasharray', link.status === 'down' ? '5,5' : 'none');
+                group.appendChild(line);
+                
+                // Link label (bandwidth/subnet)
+                const midX = (fromDevice.x + toDevice.x) / 2;
+                const midY = (fromDevice.y + toDevice.y) / 2;
+                
+                const linkLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                linkLabel.setAttribute('x', midX);
+                linkLabel.setAttribute('y', midY - 5);
+                linkLabel.setAttribute('text-anchor', 'middle');
+                linkLabel.setAttribute('font-size', '10');
+                linkLabel.setAttribute('fill', '#374151');
+                linkLabel.setAttribute('background', 'white');
+                linkLabel.textContent = link.subnet || link.bandwidth || '';
+                group.appendChild(linkLabel);
+                
+                // Interface labels
+                if (link.fromInterface && link.toInterface) {
+                    const fromLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    fromLabel.setAttribute('x', fromDevice.x + (midX - fromDevice.x) * 0.3);
+                    fromLabel.setAttribute('y', fromDevice.y + (midY - fromDevice.y) * 0.3 + 15);
+                    fromLabel.setAttribute('text-anchor', 'middle');
+                    fromLabel.setAttribute('font-size', '8');
+                    fromLabel.setAttribute('fill', '#6b7280');
+                    fromLabel.textContent = link.fromInterface;
+                    group.appendChild(fromLabel);
+                    
+                    const toLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    toLabel.setAttribute('x', toDevice.x + (midX - toDevice.x) * 0.3);
+                    toLabel.setAttribute('y', toDevice.y + (midY - toDevice.y) * 0.3 + 15);
+                    toLabel.setAttribute('text-anchor', 'middle');
+                    toLabel.setAttribute('font-size', '8');
+                    toLabel.setAttribute('fill', '#6b7280');
+                    toLabel.textContent = link.toInterface;
+                    group.appendChild(toLabel);
+                }
+                
+                svg.appendChild(group);
+            }
+        });
+        
+        // Draw devices
+        this.routingSimulator.devices.forEach(device => {
+            const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            group.setAttribute('class', 'device-group');
+            group.setAttribute('data-device-id', device.id);
+            
+            // Device icon
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', device.x);
+            circle.setAttribute('cy', device.y);
+            circle.setAttribute('r', '20');
+            circle.setAttribute('fill', this.getDeviceColor(device.type));
+            circle.setAttribute('stroke', '#374151');
+            circle.setAttribute('stroke-width', '2');
+            group.appendChild(circle);
+            
+            // Device icon text
+            const iconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            iconText.setAttribute('x', device.x);
+            iconText.setAttribute('y', device.y + 5);
+            iconText.setAttribute('text-anchor', 'middle');
+            iconText.setAttribute('font-size', '16');
+            iconText.setAttribute('fill', 'white');
+            iconText.textContent = this.getDeviceIcon(device.type);
+            group.appendChild(iconText);
+            
+            // Device label
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', device.x);
+            text.setAttribute('y', device.y + 35);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('font-size', '12');
+            text.setAttribute('fill', '#374151');
+            text.setAttribute('font-weight', 'bold');
+            text.textContent = device.id;
+            group.appendChild(text);
+            
+            // IP address for PCs and Routers
+            if (device.type === 'pc' && device.ip) {
+                const ipText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                ipText.setAttribute('x', device.x);
+                ipText.setAttribute('y', device.y + 48);
+                ipText.setAttribute('text-anchor', 'middle');
+                ipText.setAttribute('font-size', '9');
+                ipText.setAttribute('fill', '#6b7280');
+                ipText.textContent = device.ip;
+                group.appendChild(ipText);
+            } else if (device.type === 'router' && device.interfaces && device.interfaces.length > 0) {
+                // Show primary interface IP for routers
+                const primaryInterface = device.interfaces[0];
+                if (primaryInterface && primaryInterface.ip) {
+                    const ipText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    ipText.setAttribute('x', device.x);
+                    ipText.setAttribute('y', device.y + 48);
+                    ipText.setAttribute('text-anchor', 'middle');
+                    ipText.setAttribute('font-size', '8');
+                    ipText.setAttribute('fill', '#f59e0b');
+                    ipText.textContent = `${primaryInterface.name}: ${primaryInterface.ip}`;
+                    group.appendChild(ipText);
+                    
+                    // Show additional interfaces if any
+                    if (device.interfaces.length > 1) {
+                        const moreText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        moreText.setAttribute('x', device.x);
+                        moreText.setAttribute('y', device.y + 58);
+                        moreText.setAttribute('text-anchor', 'middle');
+                        moreText.setAttribute('font-size', '7');
+                        moreText.setAttribute('fill', '#6b7280');
+                        moreText.textContent = `+${device.interfaces.length - 1} más`;
+                        group.appendChild(moreText);
+                    }
+                }
+            }
+            
+            svg.appendChild(group);
+        });
+    }
+
+    getDeviceIcon(type) {
+        const icons = {
+            router: '🔧',
+            switch: '🔀',
+            pc: '💻',
+            server: '🖥️'
+        };
+        return icons[type] || '📱';
+    }
+
+    drawVlanTopology() {
+        const svg = document.getElementById('vlanSvg');
+        if (!svg) return;
+        
+        svg.innerHTML = '';
+        
+        // Draw VLAN-colored connections
+        this.vlanSimulator.devices.forEach(device => {
+            if (device.type === 'pc' && device.vlan) {
+                const vlan = this.vlanSimulator.vlans.find(v => v.id === device.vlan);
+                const switch1 = this.vlanSimulator.devices.find(d => d.type === 'switch');
+                
+                if (vlan && switch1) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', device.x);
+                    line.setAttribute('y1', device.y);
+                    line.setAttribute('x2', switch1.x);
+                    line.setAttribute('y2', switch1.y);
+                    line.setAttribute('stroke', vlan.color);
+                    line.setAttribute('stroke-width', '3');
+                    svg.appendChild(line);
+                }
+            }
+        });
+        
+        // Draw devices
+        this.vlanSimulator.devices.forEach(device => {
+            const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            
+            // Device icon
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', device.x - 25);
+            rect.setAttribute('y', device.y - 15);
+            rect.setAttribute('width', '50');
+            rect.setAttribute('height', '30');
+            rect.setAttribute('fill', this.getDeviceColor(device.type));
+            rect.setAttribute('stroke', '#374151');
+            rect.setAttribute('stroke-width', '2');
+            rect.setAttribute('rx', '5');
+            group.appendChild(rect);
+            
+            // Device label
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', device.x);
+            text.setAttribute('y', device.y + 40);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('font-size', '12');
+            text.setAttribute('fill', '#374151');
+            text.textContent = device.id;
+            group.appendChild(text);
+            
+            // VLAN indicator for PCs
+            if (device.type === 'pc' && device.vlan) {
+                const vlan = this.vlanSimulator.vlans.find(v => v.id === device.vlan);
+                if (vlan) {
+                    const vlanCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    vlanCircle.setAttribute('cx', device.x + 20);
+                    vlanCircle.setAttribute('cy', device.y - 10);
+                    vlanCircle.setAttribute('r', '8');
+                    vlanCircle.setAttribute('fill', vlan.color);
+                    group.appendChild(vlanCircle);
+                    
+                    const vlanText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    vlanText.setAttribute('x', device.x + 20);
+                    vlanText.setAttribute('y', device.y - 6);
+                    vlanText.setAttribute('text-anchor', 'middle');
+                    vlanText.setAttribute('font-size', '10');
+                    vlanText.setAttribute('fill', 'white');
+                    vlanText.textContent = device.vlan;
+                    group.appendChild(vlanText);
+                }
+            }
+            
+            svg.appendChild(group);
+        });
+    }
+
+    getDeviceColor(type) {
+        const colors = {
+            router: '#f59e0b',
+            switch: '#3b82f6',
+            pc: '#10b981',
+            server: '#8b5cf6'
+        };
+        return colors[type] || '#6b7280';
+    }
+
+    updateDeviceList() {
+        const deviceList = document.getElementById('deviceList');
+        if (!deviceList) return;
+        
+        if (this.routingSimulator.devices.length === 0) {
+            deviceList.innerHTML = '<p class="no-devices">Agregue dispositivos en la pestaña Topología para configurarlos</p>';
+            return;
+        }
+        
+        let html = '';
+        this.routingSimulator.devices.forEach(device => {
+            if (device.type === 'router') {
+                html += `
+                    <div class="device-config">
+                        <h5>🔧 ${device.id}</h5>
+                        <div class="interfaces">
+                            ${device.interfaces.map(iface => `
+                                <div class="interface-config">
+                                    <strong>${iface.name}:</strong> ${iface.ip}/${this.maskToCIDR(iface.mask)}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        deviceList.innerHTML = html;
+    }
+
+    updateVlanList() {
+        const vlanItems = document.getElementById('vlanItems');
+        if (!vlanItems) return;
+        
+        let html = '';
+        this.vlanSimulator.vlans.forEach(vlan => {
+            html += `
+                <div class="vlan-item" style="border-left: 4px solid ${vlan.color}">
+                    <div class="vlan-info">
+                        <strong>VLAN ${vlan.id}</strong> - ${vlan.name}
+                    </div>
+                    <div class="vlan-actions">
+                        <button class="btn btn--sm btn--outline" onclick="app.deleteVlan(${vlan.id})">Eliminar</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        vlanItems.innerHTML = html;
+    }
+
+    createVlan() {
+        const vlanId = parseInt(document.getElementById('vlanId').value);
+        const vlanName = document.getElementById('vlanName').value;
+        const vlanColor = document.getElementById('vlanColor').value;
+        
+        if (!vlanId || !vlanName || vlanId < 1 || vlanId > 4094) {
+            alert('Por favor ingrese un ID de VLAN válido (1-4094) y un nombre');
+            return;
+        }
+        
+        if (this.vlanSimulator.vlans.find(v => v.id === vlanId)) {
+            alert('Ya existe una VLAN con ese ID');
+            return;
+        }
+        
+        this.vlanSimulator.vlans.push({
+            id: vlanId,
+            name: vlanName,
+            color: vlanColor
+        });
+        
+        this.updateVlanList();
+        
+        // Clear form
+        document.getElementById('vlanId').value = '';
+        document.getElementById('vlanName').value = '';
+    }
+
+    deleteVlan(vlanId) {
+        if (vlanId === 1) {
+            alert('No se puede eliminar la VLAN por defecto');
+            return;
+        }
+        
+        this.vlanSimulator.vlans = this.vlanSimulator.vlans.filter(v => v.id !== vlanId);
+        this.updateVlanList();
+    }
+
+    updateRoutingTables() {
+        const protocol = document.getElementById('protocolSelect').value;
+        const tablesDiv = document.getElementById('routingTables');
+        
+        if (!tablesDiv) return;
+        
+        let html = '<h5>📊 Tablas de Enrutamiento - ' + protocol.toUpperCase() + '</h5>';
+        
+        this.routingSimulator.devices.forEach(device => {
+            if (device.type === 'router') {
+                html += `
+                    <div class="routing-table">
+                        <h6>${device.id}</h6>
+                        <table class="table-sm">
+                            <thead>
+                                <tr><th>Red</th><th>Máscara</th><th>Siguiente Salto</th><th>Interfaz</th><th>Métrica</th></tr>
+                            </thead>
+                            <tbody>
+                                ${this.generateRoutingEntries(device, protocol)}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+        });
+        
+        tablesDiv.innerHTML = html;
+    }
+
+    generateRoutingEntries(device, protocol) {
+        let entries = '';
+        
+        // Connected routes
+        device.interfaces.forEach(iface => {
+            const network = this.getNetworkAddress(iface.ip, iface.mask);
+            entries += `
+                <tr>
+                    <td>${network}</td>
+                    <td>${iface.mask}</td>
+                    <td>Conectada</td>
+                    <td>${iface.name}</td>
+                    <td>0</td>
+                </tr>
+            `;
+        });
+        
+        // Protocol-specific routes
+        if (protocol === 'static') {
+            entries += `
+                <tr>
+                    <td>0.0.0.0</td>
+                    <td>0.0.0.0</td>
+                    <td>10.0.0.2</td>
+                    <td>Fa0/1</td>
+                    <td>1</td>
+                </tr>
+            `;
+        }
+        
+        return entries;
+    }
+
+    simulatePacket() {
+        const source = document.getElementById('sourceDevice').value;
+        const destination = document.getElementById('destinationIP').value;
+        const packetType = document.getElementById('packetType').value;
+        
+        if (!source || !destination) {
+            alert('Por favor seleccione origen y destino');
+            return;
+        }
+        
+        const logContent = document.getElementById('logContent');
+        const timestamp = new Date().toLocaleTimeString();
+        
+        let logEntry = `
+            <div class="log-entry">
+                <div class="log-timestamp">[${timestamp}]</div>
+                <div class="log-message">
+                    <strong>Enviando ${packetType.toUpperCase()} desde ${source} hacia ${destination}</strong><br>
+                    1. Paquete generado en ${source}<br>
+                    2. Consultando tabla de enrutamiento...<br>
+                    3. Ruta encontrada: via gateway<br>
+                    4. Enviando por interfaz Fa0/0<br>
+                    5. Paquete recibido en destino<br>
+                    <span class="log-success">✅ Transmisión exitosa</span>
+                </div>
+            </div>
+        `;
+        
+        if (logContent.querySelector('.log-empty')) {
+            logContent.innerHTML = '';
+        }
+        
+        logContent.innerHTML += logEntry;
+        logContent.scrollTop = logContent.scrollHeight;
+    }
+
+    testVlanConnectivity() {
+        const source = document.getElementById('testSource').value;
+        const destination = document.getElementById('testDestination').value;
+        const resultsDiv = document.getElementById('testResults');
+        
+        if (!source || !destination) {
+            alert('Seleccione dispositivos origen y destino');
+            return;
+        }
+        
+        const sourceDevice = this.vlanSimulator.devices.find(d => d.id === source);
+        const destDevice = this.vlanSimulator.devices.find(d => d.id === destination);
+        
+        let result = '';
+        if (sourceDevice.vlan === destDevice.vlan) {
+            result = `
+                <div class="test-success">
+                    ✅ <strong>Conectividad Exitosa</strong><br>
+                    Ambos dispositivos están en VLAN ${sourceDevice.vlan}<br>
+                    Comunicación directa a través del switch
+                </div>
+            `;
+        } else {
+            result = `
+                <div class="test-warning">
+                    ⚠️ <strong>Requiere Enrutamiento Inter-VLAN</strong><br>
+                    ${source} (VLAN ${sourceDevice.vlan}) → ${destination} (VLAN ${destDevice.vlan})<br>
+                    Se necesita un router o switch L3 configurado
+                </div>
+            `;
+        }
+        
+        resultsDiv.innerHTML = result;
+    }
+
+    clearTopology() {
+        this.routingSimulator.devices = [];
+        this.routingSimulator.links = [];
+        this.drawTopology();
+        this.updateDeviceList();
+    }
+
+    clearVlanTopology() {
+        this.vlanSimulator.devices = [];
+        this.drawVlanTopology();
+    }
+
+    clearSimulationLog() {
+        const logContent = document.getElementById('logContent');
+        if (logContent) {
+            logContent.innerHTML = '<p class="log-empty">Envíe un paquete para ver el proceso de enrutamiento</p>';
+        }
+    }
+
+    maskToCIDR(mask) {
+        const octets = mask.split('.').map(Number);
+        let cidr = 0;
+        octets.forEach(octet => {
+            cidr += (octet >>> 0).toString(2).split('1').length - 1;
+        });
+        return cidr;
+    }
+
+    getNetworkAddress(ip, mask) {
+        const ipOctets = ip.split('.').map(Number);
+        const maskOctets = mask.split('.').map(Number);
+        const networkOctets = ipOctets.map((octet, i) => octet & maskOctets[i]);
+        return networkOctets.join('.');
+    }
+
+    // Enhanced routing simulator methods
+    selectRoutingDevice(deviceType) {
+        // Clear previous selection
+        document.querySelectorAll('#routingSimModal .device-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        
+        // Select new device type
+        document.querySelector(`#routingSimModal [data-device="${deviceType}"]`).classList.add('selected');
+        this.routingSimulator.selectedDeviceType = deviceType;
+        
+        // Update cursor and instructions
+        const canvas = document.getElementById('topologyCanvas');
+        if (canvas) {
+            canvas.style.cursor = 'crosshair';
+            canvas.title = `Haga clic para colocar ${deviceType}`;
+        }
+    }
+
+    placeDevice(event, simulatorType) {
+        const svg = simulatorType === 'routing' ? document.getElementById('topologySvg') : document.getElementById('vlanSvg');
+        const rect = svg.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        
+        const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+        const deviceType = simulator.selectedDeviceType;
+        
+        if (!deviceType) return;
+        
+        // Generate unique device ID
+        const deviceCount = simulator.devices.filter(d => d.type === deviceType).length;
+        const deviceId = this.generateDeviceId(deviceType, deviceCount);
+        
+        // Create new device
+        const newDevice = {
+            id: deviceId,
+            type: deviceType,
+            x: x,
+            y: y
+        };
+        
+        // Add device-specific properties
+        if (deviceType === 'router') {
+            newDevice.interfaces = [
+                { name: 'Fa0/0', ip: '192.168.1.1', mask: '255.255.255.0' },
+                { name: 'Fa0/1', ip: '10.0.0.1', mask: '255.255.255.252' }
+            ];
+        } else if (deviceType === 'pc') {
+            newDevice.ip = '192.168.1.10';
+            newDevice.gateway = '192.168.1.1';
+        }
+        
+        simulator.devices.push(newDevice);
+        
+        // Redraw and update
+        if (simulatorType === 'routing') {
+            this.drawTopology();
+            this.updateDeviceList();
+            this.updateSourceDeviceList();
+        } else {
+            this.drawVlanTopology();
+        }
+        
+        // Clear selection
+        simulator.selectedDeviceType = null;
+        document.querySelectorAll(`#${simulatorType}SimModal .device-btn`).forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        
+        const canvas = document.getElementById(simulatorType === 'routing' ? 'topologyCanvas' : 'vlanCanvas');
+        if (canvas) {
+            canvas.style.cursor = 'default';
+            canvas.title = '';
+        }
+    }
+
+    generateDeviceId(deviceType, count) {
+        const prefixes = {
+            router: 'R',
+            switch: 'SW',
+            pc: 'PC',
+            server: 'SRV'
+        };
+        return `${prefixes[deviceType] || 'DEV'}${count + 1}`;
+    }
+
+    enableDeviceDragging(svgId) {
+        const svg = document.getElementById(svgId);
+        if (!svg) return;
+        
+        let draggedDevice = null;
+        let offset = { x: 0, y: 0 };
+        
+        svg.addEventListener('mousedown', (e) => {
+            const target = e.target.closest('g');
+            if (!target) return;
+            
+            // Find device by position
+            const simulator = svgId === 'topologySvg' ? this.routingSimulator : this.vlanSimulator;
+            const rect = svg.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            draggedDevice = simulator.devices.find(d => 
+                Math.abs(d.x - x) < 30 && Math.abs(d.y - y) < 30
+            );
+            
+            if (draggedDevice) {
+                offset.x = x - draggedDevice.x;
+                offset.y = y - draggedDevice.y;
+                svg.style.cursor = 'grabbing';
+                e.preventDefault();
+            }
+        });
+        
+        svg.addEventListener('mousemove', (e) => {
+            if (!draggedDevice) return;
+            
+            const rect = svg.getBoundingClientRect();
+            const x = e.clientX - rect.left - offset.x;
+            const y = e.clientY - rect.top - offset.y;
+            
+            // Update device position
+            draggedDevice.x = Math.max(30, Math.min(x, rect.width - 30));
+            draggedDevice.y = Math.max(30, Math.min(y, rect.height - 30));
+            
+            // Redraw
+            if (svgId === 'topologySvg') {
+                this.drawTopology();
+            } else {
+                this.drawVlanTopology();
+            }
+        });
+        
+        svg.addEventListener('mouseup', () => {
+            if (draggedDevice) {
+                draggedDevice = null;
+                svg.style.cursor = 'default';
+            }
+        });
+    }
+
+    updateSourceDeviceList() {
+        const sourceSelect = document.getElementById('sourceDevice');
+        if (!sourceSelect) return;
+        
+        sourceSelect.innerHTML = '<option value="">Seleccionar dispositivo</option>';
+        
+        this.routingSimulator.devices.forEach(device => {
+            if (device.type === 'pc' || device.type === 'router') {
+                const option = document.createElement('option');
+                option.value = device.id;
+                option.textContent = `${device.id} (${device.ip || device.interfaces?.[0]?.ip || 'Sin IP'})`;
+                sourceSelect.appendChild(option);
+            }
+        });
+    }
+
+    simulatePacketWithAnimation() {
+        const source = document.getElementById('sourceDevice').value;
+        const destination = document.getElementById('destinationIP').value;
+        const packetType = document.getElementById('packetType').value;
+        
+        if (!source || !destination) {
+            alert('Por favor seleccione origen y destino');
+            return;
+        }
+        
+        // Validate destination IP
+        if (!this.validateIP(destination)) {
+            alert('Por favor ingrese una IP de destino válida');
+            return;
+        }
+        
+        const sourceDevice = this.routingSimulator.devices.find(d => d.id === source);
+        if (!sourceDevice) {
+            alert('Dispositivo origen no encontrado');
+            return;
+        }
+        
+        // Find path to destination
+        const path = this.findRoutingPath(sourceDevice, destination);
+        
+        // Animate packet along path
+        this.animatePacket(path, packetType);
+        
+        // Log detailed simulation
+        this.logDetailedSimulation(source, destination, packetType, path);
+    }
+
+    findRoutingPath(sourceDevice, destinationIP) {
+        // Simplified path finding - in real implementation would use routing tables
+        const path = [sourceDevice];
+        
+        // Find gateway/next hop
+        if (sourceDevice.type === 'pc' && sourceDevice.gateway) {
+            const gateway = this.routingSimulator.devices.find(d => 
+                d.type === 'router' && d.interfaces?.some(iface => iface.ip === sourceDevice.gateway)
+            );
+            if (gateway) {
+                path.push(gateway);
+                
+                // Find destination network
+                const destRouter = this.routingSimulator.devices.find(d => 
+                    d.type === 'router' && d.interfaces?.some(iface => 
+                        this.isInSameNetwork(destinationIP, iface.ip, iface.mask)
+                    )
+                );
+                
+                if (destRouter && destRouter.id !== gateway.id) {
+                    path.push(destRouter);
+                }
+            }
+        }
+        
+        return path;
+    }
+
+    isInSameNetwork(ip1, ip2, mask) {
+        const network1 = this.getNetworkAddress(ip1, mask);
+        const network2 = this.getNetworkAddress(ip2, mask);
+        return network1 === network2;
+    }
+
+    animatePacket(path, packetType) {
+        if (path.length < 2) return;
+        
+        const svg = document.getElementById('topologySvg');
+        const packet = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        packet.setAttribute('r', '5');
+        packet.setAttribute('fill', '#ff6b6b');
+        packet.setAttribute('stroke', '#fff');
+        packet.setAttribute('stroke-width', '2');
+        packet.classList.add('packet-animation');
+        
+        svg.appendChild(packet);
+        
+        let currentStep = 0;
+        const animateStep = () => {
+            if (currentStep >= path.length - 1) {
+                svg.removeChild(packet);
+                return;
+            }
+            
+            const from = path[currentStep];
+            const to = path[currentStep + 1];
+            
+            // Animate from current to next device
+            packet.setAttribute('cx', from.x);
+            packet.setAttribute('cy', from.y);
+            
+            const animation = packet.animate([
+                { cx: from.x, cy: from.y },
+                { cx: to.x, cy: to.y }
+            ], {
+                duration: 1000,
+                easing: 'ease-in-out'
+            });
+            
+            animation.onfinish = () => {
+                currentStep++;
+                setTimeout(animateStep, 200);
+            };
+        };
+        
+        animateStep();
+    }
+
+    logDetailedSimulation(source, destination, packetType, path) {
+        const logContent = document.getElementById('logContent');
+        const timestamp = new Date().toLocaleTimeString();
+        
+        let pathDescription = path.map(device => device.id).join(' → ');
+        
+        let logEntry = `
+            <div class="log-entry">
+                <div class="log-timestamp">[${timestamp}]</div>
+                <div class="log-message">
+                    <strong>🚀 Simulación ${packetType.toUpperCase()}: ${source} → ${destination}</strong><br>
+                    <div class="log-step">1. 📤 Paquete generado en ${source}</div>
+                    <div class="log-step">2. 🔍 Consultando tabla de enrutamiento local...</div>
+                    <div class="log-step">3. 🛣️ Ruta determinada: ${pathDescription}</div>
+                    <div class="log-step">4. 📡 Enviando paquete por la ruta calculada</div>
+                    <div class="log-step">5. ✅ Paquete entregado exitosamente</div>
+                    <div class="log-stats">
+                        <span class="stat">Saltos: ${path.length - 1}</span>
+                        <span class="stat">Latencia estimada: ${(path.length - 1) * 10}ms</span>
+                        <span class="stat">Protocolo: ${packetType.toUpperCase()}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        if (logContent.querySelector('.log-empty')) {
+            logContent.innerHTML = '';
+        }
+        
+        logContent.innerHTML += logEntry;
+         logContent.scrollTop = logContent.scrollHeight;
+     }
+
+     // Enhanced VLAN simulator methods
+     selectVlanDevice(deviceType) {
+         // Clear previous selection
+         document.querySelectorAll('#vlanSimModal .device-btn').forEach(btn => {
+             btn.classList.remove('selected');
+         });
+         
+         // Select new device type
+         document.querySelector(`#vlanSimModal [data-device="${deviceType}"]`).classList.add('selected');
+         this.vlanSimulator.selectedDeviceType = deviceType;
+         
+         // Update cursor and instructions
+         const canvas = document.getElementById('vlanCanvas');
+         if (canvas) {
+             canvas.style.cursor = 'crosshair';
+             canvas.title = `Haga clic para colocar ${deviceType}`;
+         }
+     }
+
+     createVlanAdvanced() {
+         const vlanId = parseInt(document.getElementById('vlanId').value);
+         const vlanName = document.getElementById('vlanName').value.trim();
+         const vlanColor = document.getElementById('vlanColor').value;
+         
+         // Enhanced validation
+         if (!vlanId || !vlanName) {
+             this.showVlanAlert('Por favor complete todos los campos', 'warning');
+             return;
+         }
+         
+         if (vlanId < 1 || vlanId > 4094) {
+             this.showVlanAlert('El ID de VLAN debe estar entre 1 y 4094', 'error');
+             return;
+         }
+         
+         // Check for reserved VLANs
+         const reservedVlans = [1002, 1003, 1004, 1005];
+         if (reservedVlans.includes(vlanId)) {
+             this.showVlanAlert(`VLAN ${vlanId} está reservada para uso del sistema`, 'warning');
+             return;
+         }
+         
+         if (this.vlanSimulator.vlans.find(v => v.id === vlanId)) {
+             this.showVlanAlert('Ya existe una VLAN con ese ID', 'error');
+             return;
+         }
+         
+         if (this.vlanSimulator.vlans.find(v => v.name.toLowerCase() === vlanName.toLowerCase())) {
+             this.showVlanAlert('Ya existe una VLAN con ese nombre', 'warning');
+             return;
+         }
+         
+         // Create VLAN with additional properties
+         const newVlan = {
+             id: vlanId,
+             name: vlanName,
+             color: vlanColor,
+             created: new Date().toLocaleString(),
+             ports: [],
+             status: 'active'
+         };
+         
+         this.vlanSimulator.vlans.push(newVlan);
+         this.updateVlanList();
+         this.updateNativeVlanSelector();
+         
+         // Clear form and show success
+         document.getElementById('vlanId').value = '';
+         document.getElementById('vlanName').value = '';
+         this.showVlanAlert(`VLAN ${vlanId} (${vlanName}) creada exitosamente`, 'success');
+     }
+
+     showVlanAlert(message, type) {
+         // Create temporary alert
+         const alert = document.createElement('div');
+         alert.className = `vlan-alert vlan-alert--${type}`;
+         alert.textContent = message;
+         
+         const vlanCreator = document.querySelector('.vlan-creator');
+         vlanCreator.insertBefore(alert, vlanCreator.firstChild);
+         
+         setTimeout(() => {
+             if (alert.parentNode) {
+                 alert.parentNode.removeChild(alert);
+             }
+         }, 3000);
+     }
+
+     updateNativeVlanSelector() {
+         const nativeSelect = document.getElementById('nativeVlan');
+         if (!nativeSelect) return;
+         
+         const currentValue = nativeSelect.value;
+         nativeSelect.innerHTML = '';
+         
+         this.vlanSimulator.vlans.forEach(vlan => {
+             const option = document.createElement('option');
+             option.value = vlan.id;
+             option.textContent = `VLAN ${vlan.id} (${vlan.name})`;
+             if (vlan.id.toString() === currentValue) {
+                 option.selected = true;
+             }
+             nativeSelect.appendChild(option);
+         });
+     }
+
+     updateTrunkConfiguration() {
+         const nativeVlan = document.getElementById('nativeVlan').value;
+         const allowedVlans = document.getElementById('allowedVlans').value;
+         
+         // Update trunk links display
+         const trunkLinks = document.getElementById('trunkLinks');
+         if (trunkLinks) {
+             trunkLinks.innerHTML = `
+                 <div class="trunk-link">
+                     <h6>🔗 Enlace Trunk SW1 ↔ R1</h6>
+                     <div class="trunk-details">
+                         <div class="trunk-detail">
+                             <strong>Protocolo:</strong> 802.1Q
+                         </div>
+                         <div class="trunk-detail">
+                             <strong>VLAN Nativa:</strong> ${nativeVlan}
+                         </div>
+                         <div class="trunk-detail">
+                             <strong>VLANs Permitidas:</strong> ${allowedVlans || 'Todas'}
+                         </div>
+                         <div class="trunk-status">
+                             <span class="status-active">✅ Activo</span>
+                         </div>
+                     </div>
+                 </div>
+             `;
+         }
+     }
+
+     updateVlanTestDevices() {
+         const sourceSelect = document.getElementById('testSource');
+         const destSelect = document.getElementById('testDestination');
+         
+         if (!sourceSelect || !destSelect) return;
+         
+         const updateSelect = (select) => {
+             const currentValue = select.value;
+             select.innerHTML = '<option value="">Seleccionar dispositivo</option>';
+             
+             this.vlanSimulator.devices.forEach(device => {
+                 if (device.type === 'pc' || device.type === 'server') {
+                     const option = document.createElement('option');
+                     option.value = device.id;
+                     const vlanInfo = device.vlan ? ` (VLAN ${device.vlan})` : '';
+                     option.textContent = `${device.id}${vlanInfo}`;
+                     if (device.id === currentValue) {
+                         option.selected = true;
+                     }
+                     select.appendChild(option);
+                 }
+             });
+         };
+         
+         updateSelect(sourceSelect);
+         updateSelect(destSelect);
+     }
+
+     testVlanConnectivityAdvanced() {
+         const source = document.getElementById('testSource').value;
+         const destination = document.getElementById('testDestination').value;
+         const resultsDiv = document.getElementById('testResults');
+         
+         if (!source || !destination) {
+             this.showConnectivityResult('Seleccione dispositivos origen y destino', 'warning', resultsDiv);
+             return;
+         }
+         
+         if (source === destination) {
+             this.showConnectivityResult('El origen y destino no pueden ser el mismo dispositivo', 'error', resultsDiv);
+             return;
+         }
+         
+         const sourceDevice = this.vlanSimulator.devices.find(d => d.id === source);
+         const destDevice = this.vlanSimulator.devices.find(d => d.id === destination);
+         
+         if (!sourceDevice || !destDevice) {
+             this.showConnectivityResult('Dispositivos no encontrados', 'error', resultsDiv);
+             return;
+         }
+         
+         // Detailed connectivity analysis
+         const analysis = this.analyzeVlanConnectivity(sourceDevice, destDevice);
+         this.showConnectivityResult(analysis.message, analysis.type, resultsDiv, analysis.details);
+     }
+
+     analyzeVlanConnectivity(sourceDevice, destDevice) {
+         const sourceVlan = sourceDevice.vlan || 1;
+         const destVlan = destDevice.vlan || 1;
+         
+         if (sourceVlan === destVlan) {
+             return {
+                 type: 'success',
+                 message: 'Conectividad Directa Exitosa',
+                 details: {
+                     path: `${sourceDevice.id} → Switch → ${destDevice.id}`,
+                     vlan: sourceVlan,
+                     method: 'Switching L2',
+                     latency: '< 1ms',
+                     status: 'Comunicación directa dentro de la misma VLAN'
+                 }
+             };
+         } else {
+             // Check if inter-VLAN routing is configured
+             const hasRouter = this.vlanSimulator.devices.some(d => d.type === 'router');
+             
+             if (hasRouter) {
+                 return {
+                     type: 'success',
+                     message: 'Conectividad Inter-VLAN Disponible',
+                     details: {
+                         path: `${sourceDevice.id} → Switch → Router → Switch → ${destDevice.id}`,
+                         sourceVlan: sourceVlan,
+                         destVlan: destVlan,
+                         method: 'Router-on-a-Stick',
+                         latency: '2-5ms',
+                         status: 'Enrutamiento inter-VLAN configurado'
+                     }
+                 };
+             } else {
+                 return {
+                     type: 'error',
+                     message: 'Conectividad Bloqueada',
+                     details: {
+                         path: 'Sin ruta disponible',
+                         sourceVlan: sourceVlan,
+                         destVlan: destVlan,
+                         method: 'N/A',
+                         latency: 'N/A',
+                         status: 'Se requiere router para comunicación inter-VLAN'
+                     }
+                 };
+             }
+         }
+     }
+
+     showConnectivityResult(message, type, container, details = null) {
+         let resultHtml = `
+             <div class="test-${type}">
+                 <div class="result-header">
+                     ${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '❌'} 
+                     <strong>${message}</strong>
+                 </div>
+         `;
+         
+         if (details) {
+             resultHtml += `
+                 <div class="result-details">
+                     <div class="detail-row">
+                         <span class="detail-label">Ruta:</span>
+                         <span class="detail-value">${details.path}</span>
+                     </div>
+                     ${details.sourceVlan ? `
+                         <div class="detail-row">
+                             <span class="detail-label">VLAN Origen:</span>
+                             <span class="detail-value">${details.sourceVlan}</span>
+                         </div>
+                     ` : ''}
+                     ${details.destVlan ? `
+                         <div class="detail-row">
+                             <span class="detail-label">VLAN Destino:</span>
+                             <span class="detail-value">${details.destVlan}</span>
+                         </div>
+                     ` : ''}
+                     ${details.vlan ? `
+                         <div class="detail-row">
+                             <span class="detail-label">VLAN:</span>
+                             <span class="detail-value">${details.vlan}</span>
+                         </div>
+                     ` : ''}
+                     <div class="detail-row">
+                         <span class="detail-label">Método:</span>
+                         <span class="detail-value">${details.method}</span>
+                     </div>
+                     <div class="detail-row">
+                         <span class="detail-label">Latencia:</span>
+                         <span class="detail-value">${details.latency}</span>
+                     </div>
+                     <div class="detail-row">
+                         <span class="detail-label">Estado:</span>
+                         <span class="detail-value">${details.status}</span>
+                     </div>
+                 </div>
+             `;
+         }
+         
+         resultHtml += '</div>';
+         container.innerHTML = resultHtml;
+     }
+
+     // Context menu and deletion functionality
+      showContextMenu(event, simulatorType) {
+          const svg = simulatorType === 'routing' ? document.getElementById('topologySvg') : document.getElementById('vlanSvg');
+          const rect = svg.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          const y = event.clientY - rect.top;
+          
+          const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+          
+          // Find clicked device
+          const clickedDevice = simulator.devices.find(d => 
+              Math.abs(d.x - x) < 30 && Math.abs(d.y - y) < 30
+          );
+          
+          // Find clicked link
+          const clickedLink = this.findClickedLink(x, y, simulator);
+          
+          if (clickedDevice || clickedLink) {
+              this.createContextMenu(event, clickedDevice, clickedLink, simulatorType);
+          }
+      }
+
+      findClickedLink(x, y, simulator) {
+          for (let link of simulator.links) {
+              const fromDevice = simulator.devices.find(d => d.id === link.from);
+              const toDevice = simulator.devices.find(d => d.id === link.to);
+              
+              if (fromDevice && toDevice) {
+                  // Check if click is near the link line
+                  const distance = this.distanceToLine(x, y, fromDevice.x, fromDevice.y, toDevice.x, toDevice.y);
+                  if (distance < 10) {
+                      return link;
+                  }
+              }
+          }
+          return null;
+      }
+
+      distanceToLine(px, py, x1, y1, x2, y2) {
+          const A = px - x1;
+          const B = py - y1;
+          const C = x2 - x1;
+          const D = y2 - y1;
+          
+          const dot = A * C + B * D;
+          const lenSq = C * C + D * D;
+          let param = -1;
+          
+          if (lenSq !== 0) {
+              param = dot / lenSq;
+          }
+          
+          let xx, yy;
+          
+          if (param < 0) {
+              xx = x1;
+              yy = y1;
+          } else if (param > 1) {
+              xx = x2;
+              yy = y2;
+          } else {
+              xx = x1 + param * C;
+              yy = y1 + param * D;
+          }
+          
+          const dx = px - xx;
+          const dy = py - yy;
+          return Math.sqrt(dx * dx + dy * dy);
+      }
+
+      createContextMenu(event, device, link, simulatorType) {
+          // Remove existing context menu
+          const existingMenu = document.querySelector('.context-menu');
+          if (existingMenu) {
+              existingMenu.remove();
+          }
+          
+          const menu = document.createElement('div');
+          menu.className = 'context-menu';
+          menu.style.position = 'fixed';
+          menu.style.left = event.clientX + 'px';
+          menu.style.top = event.clientY + 'px';
+          menu.style.zIndex = '10000';
+          
+          let menuContent = '';
+          
+          if (device) {
+              menuContent = `
+                  <div class="context-menu-header">
+                      ${this.getDeviceIcon(device.type)} ${device.id}
+                  </div>
+                  <div class="context-menu-item" data-action="delete-device" data-device-id="${device.id}" data-simulator="${simulatorType}">
+                      🗑️ Eliminar Dispositivo
+                  </div>
+                  <div class="context-menu-item" data-action="edit-device" data-device-id="${device.id}" data-simulator="${simulatorType}">
+                      ✏️ Editar Propiedades
+                  </div>
+              `;
+          } else if (link) {
+              menuContent = `
+                  <div class="context-menu-header">
+                      🔗 ${link.from} ↔ ${link.to}
+                  </div>
+                  <div class="context-menu-item" data-action="delete-link" data-link-id="${link.id}" data-simulator="${simulatorType}">
+                      🗑️ Eliminar Enlace
+                  </div>
+                  <div class="context-menu-item" data-action="edit-link" data-link-id="${link.id}" data-simulator="${simulatorType}">
+                      ✏️ Editar Propiedades
+                  </div>
+              `;
+          }
+          
+          menu.innerHTML = menuContent;
+          document.body.appendChild(menu);
+          
+          // Add event listeners to menu items
+          menu.addEventListener('click', (e) => {
+              const action = e.target.dataset.action;
+              const deviceId = e.target.dataset.deviceId;
+              const linkId = e.target.dataset.linkId;
+              const simulator = e.target.dataset.simulator;
+              
+              if (action === 'delete-device') {
+                  this.deleteDevice(deviceId, simulator);
+              } else if (action === 'delete-link') {
+                  this.deleteLink(linkId, simulator);
+              } else if (action === 'edit-device') {
+                  this.editDevice(deviceId, simulator);
+              } else if (action === 'edit-link') {
+                  this.editLink(linkId, simulator);
+              }
+              
+              menu.remove();
+          });
+          
+          // Remove menu when clicking elsewhere
+          setTimeout(() => {
+              document.addEventListener('click', function removeMenu() {
+                  menu.remove();
+                  document.removeEventListener('click', removeMenu);
+              });
+          }, 100);
+      }
+
+      deleteDevice(deviceId, simulatorType) {
+          const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+          const device = simulator.devices.find(d => d.id === deviceId);
+          
+          if (!device) return;
+          
+          if (confirm(`¿Está seguro de que desea eliminar el dispositivo ${deviceId}?`)) {
+              // Remove device from array
+              simulator.devices = simulator.devices.filter(d => d.id !== deviceId);
+              
+              // Remove all links connected to this device
+              simulator.links = simulator.links.filter(link => 
+                  link.from !== deviceId && link.to !== deviceId
+              );
+              
+              // Redraw topology
+              if (simulatorType === 'routing') {
+                  this.drawTopology();
+                  this.updateDeviceList();
+                  this.updateSourceDeviceList();
+              } else {
+                  this.drawVlanTopology();
+                  this.updateVlanTestDevices();
+              }
+              
+              this.showLinkAlert(`Dispositivo ${deviceId} eliminado exitosamente`, 'success');
+          }
+      }
+
+      deleteLink(linkId, simulatorType) {
+          const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+          const link = simulator.links.find(l => l.id === linkId);
+          
+          if (!link) return;
+          
+          if (confirm(`¿Está seguro de que desea eliminar el enlace ${link.from} ↔ ${link.to}?`)) {
+              // Remove link from array
+              simulator.links = simulator.links.filter(l => l.id !== linkId);
+              
+              // Remove interface configurations if it's a routing simulator
+              if (simulatorType === 'routing') {
+                  const fromDevice = simulator.devices.find(d => d.id === link.from);
+                  const toDevice = simulator.devices.find(d => d.id === link.to);
+                  
+                  if (fromDevice && fromDevice.interfaces) {
+                      fromDevice.interfaces = fromDevice.interfaces.filter(iface => 
+                          iface.name !== link.fromInterface
+                      );
+                  }
+                  
+                  if (toDevice && toDevice.interfaces) {
+                      toDevice.interfaces = toDevice.interfaces.filter(iface => 
+                          iface.name !== link.toInterface
+                      );
+                  }
+              }
+              
+              // Redraw topology
+              if (simulatorType === 'routing') {
+                  this.drawTopology();
+                  this.updateDeviceList();
+              } else {
+                  this.drawVlanTopology();
+              }
+              
+              this.showLinkAlert(`Enlace ${link.from} ↔ ${link.to} eliminado exitosamente`, 'success');
+          }
+      }
+
+      editDevice(deviceId, simulatorType) {
+          const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+          const device = simulator.devices.find(d => d.id === deviceId);
+          
+          if (!device) return;
+          
+          // Create edit modal
+          this.createEditDeviceModal(device, simulatorType);
+      }
+
+      editLink(linkId, simulatorType) {
+          const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+          const link = simulator.links.find(l => l.id === linkId);
+          
+          if (!link) return;
+          
+          // Create edit modal
+          this.createEditLinkModal(link, simulatorType);
+      }
+
+      createEditDeviceModal(device, simulatorType) {
+          const modal = document.createElement('div');
+          modal.className = 'modal edit-device-modal';
+          
+          let interfaceFields = '';
+          if (device.type === 'router' && device.interfaces) {
+              interfaceFields = `
+                  <div class="form-group">
+                      <label><strong>Interfaces del Router:</strong></label>
+                      <div class="interfaces-container" id="interfacesContainer">
+                          ${device.interfaces.map((iface, index) => `
+                              <div class="interface-row">
+                                  <div class="interface-header">
+                                      <span class="interface-name">${iface.name}</span>
+                                      <button type="button" class="btn btn--sm btn--outline" onclick="this.parentElement.parentElement.remove()">Eliminar</button>
+                                  </div>
+                                  <div class="interface-fields">
+                                      <input type="text" placeholder="Dirección IP" value="${iface.ip || ''}" class="form-control interface-ip" data-interface="${index}">
+                                      <input type="text" placeholder="Máscara" value="${iface.mask || ''}" class="form-control interface-mask" data-interface="${index}">
+                                      <select class="form-control interface-status" data-interface="${index}">
+                                          <option value="up" ${iface.status === 'up' ? 'selected' : ''}>Up</option>
+                                          <option value="down" ${iface.status === 'down' ? 'selected' : ''}>Down</option>
+                                      </select>
+                                  </div>
+                              </div>
+                          `).join('')}
+                      </div>
+                      <button type="button" class="btn btn--sm btn--primary" id="addInterface">+ Agregar Interfaz</button>
+                  </div>
+              `;
+          }
+          
+          modal.innerHTML = `
+              <div class="modal-content modal-content--large">
+                  <div class="modal-header">
+                      <h3>⚙️ Configuración de ${device.id} (${device.type.toUpperCase()})</h3>
+                      <button class="modal-close">&times;</button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="device-config-tabs">
+                          <button class="config-tab active" data-tab="general">General</button>
+                          ${device.type === 'router' ? '<button class="config-tab" data-tab="interfaces">Interfaces</button>' : ''}
+                          ${device.type === 'pc' ? '<button class="config-tab" data-tab="network">Red</button>' : ''}
+                      </div>
+                      
+                      <div class="config-content">
+                          <div class="config-panel active" id="generalPanel">
+                              <div class="form-group">
+                                  <label>Nombre del Dispositivo:</label>
+                                  <input type="text" id="editDeviceId" value="${device.id}" class="form-control">
+                              </div>
+                              <div class="form-group">
+                                  <label>Descripción:</label>
+                                  <input type="text" id="editDeviceDescription" value="${device.description || ''}" class="form-control" placeholder="Descripción opcional">
+                              </div>
+                              ${simulatorType === 'vlan' && (device.type === 'pc' || device.type === 'server') ? `
+                                  <div class="form-group">
+                                      <label>VLAN Asignada:</label>
+                                      <select id="editDeviceVlan" class="form-control">
+                                          ${this.vlanSimulator.vlans.map(vlan => 
+                                              `<option value="${vlan.id}" ${device.vlan === vlan.id ? 'selected' : ''}>
+                                                  VLAN ${vlan.id} (${vlan.name})
+                                              </option>`
+                                          ).join('')}
+                                      </select>
+                                  </div>
+                              ` : ''}
+                          </div>
+                          
+                          ${device.type === 'router' ? `
+                              <div class="config-panel" id="interfacesPanel">
+                                  ${interfaceFields}
+                              </div>
+                          ` : ''}
+                          
+                          ${device.type === 'pc' ? `
+                              <div class="config-panel" id="networkPanel">
+                                  <div class="form-group">
+                                      <label>Dirección IP:</label>
+                                      <input type="text" id="editDeviceIP" value="${device.ip || ''}" class="form-control" placeholder="192.168.1.10">
+                                  </div>
+                                  <div class="form-group">
+                                      <label>Máscara de Subred:</label>
+                                      <input type="text" id="editDeviceMask" value="${device.mask || '255.255.255.0'}" class="form-control">
+                                  </div>
+                                  <div class="form-group">
+                                      <label>Gateway Predeterminado:</label>
+                                      <input type="text" id="editDeviceGateway" value="${device.gateway || ''}" class="form-control" placeholder="192.168.1.1">
+                                  </div>
+                                  <div class="form-group">
+                                      <label>DNS Primario:</label>
+                                      <input type="text" id="editDeviceDNS" value="${device.dns || '8.8.8.8'}" class="form-control">
+                                  </div>
+                              </div>
+                          ` : ''}
+                      </div>
+                      
+                      <div class="form-actions">
+                          <button class="btn btn--success" id="saveDeviceChanges">💾 Aplicar Configuración</button>
+                          <button class="btn btn--secondary" id="cancelDeviceEdit">❌ Cancelar</button>
+                      </div>
+                  </div>
+              </div>
+          `;
+          
+          document.body.appendChild(modal);
+          modal.classList.remove('hidden');
+          
+          // Event listeners
+          modal.querySelector('.modal-close').addEventListener('click', () => {
+              modal.remove();
+          });
+          
+          modal.querySelector('#cancelDeviceEdit').addEventListener('click', () => {
+              modal.remove();
+          });
+          
+          modal.querySelector('#saveDeviceChanges').addEventListener('click', () => {
+              this.saveDeviceChanges(device, simulatorType, modal);
+          });
+          
+          // Tab switching for device config
+          modal.querySelectorAll('.config-tab').forEach(tab => {
+              tab.addEventListener('click', (e) => {
+                  const tabName = e.target.dataset.tab;
+                  this.switchConfigTab(tabName, modal);
+              });
+          });
+          
+          // Add interface button
+          const addInterfaceBtn = modal.querySelector('#addInterface');
+          if (addInterfaceBtn) {
+              addInterfaceBtn.addEventListener('click', () => {
+                  this.addNewInterface(device, modal);
+              });
+          }
+      }
+
+      saveDeviceChanges(device, simulatorType, modal) {
+          const newId = document.getElementById('editDeviceId').value.trim();
+          const newDescription = document.getElementById('editDeviceDescription')?.value.trim();
+          const newIP = document.getElementById('editDeviceIP')?.value.trim();
+          const newMask = document.getElementById('editDeviceMask')?.value.trim();
+          const newGateway = document.getElementById('editDeviceGateway')?.value.trim();
+          const newDNS = document.getElementById('editDeviceDNS')?.value.trim();
+          const newVlan = document.getElementById('editDeviceVlan')?.value;
+          
+          if (!newId) {
+              alert('El ID del dispositivo no puede estar vacío');
+              return;
+          }
+          
+          const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+          
+          // Check if new ID already exists (and it's not the same device)
+          if (newId !== device.id && simulator.devices.find(d => d.id === newId)) {
+              alert('Ya existe un dispositivo con ese ID');
+              return;
+          }
+          
+          // Update device properties
+          const oldId = device.id;
+          device.id = newId;
+          
+          if (newDescription !== undefined) device.description = newDescription;
+          if (newIP !== undefined) device.ip = newIP;
+          if (newMask !== undefined) device.mask = newMask;
+          if (newGateway !== undefined) device.gateway = newGateway;
+          if (newDNS !== undefined) device.dns = newDNS;
+          if (newVlan !== undefined) device.vlan = parseInt(newVlan);
+          
+          // Update router interfaces if applicable
+          if (device.type === 'router') {
+              const interfaceRows = modal.querySelectorAll('.interface-row');
+              const newInterfaces = [];
+              
+              interfaceRows.forEach((row, index) => {
+                  const interfaceName = row.querySelector('.interface-name').textContent;
+                  const ip = row.querySelector('.interface-ip').value.trim();
+                  const mask = row.querySelector('.interface-mask').value.trim();
+                  const status = row.querySelector('.interface-status').value;
+                  
+                  if (ip && mask) {
+                      newInterfaces.push({
+                          name: interfaceName,
+                          ip: ip,
+                          mask: mask,
+                          status: status
+                      });
+                  }
+              });
+              
+              device.interfaces = newInterfaces;
+          }
+          
+          // Update links that reference this device
+          simulator.links.forEach(link => {
+              if (link.from === oldId) link.from = newId;
+              if (link.to === oldId) link.to = newId;
+          });
+          
+          // Redraw and update
+          if (simulatorType === 'routing') {
+              this.drawTopology();
+              this.updateDeviceList();
+              this.updateSourceDeviceList();
+          } else {
+              this.drawVlanTopology();
+              this.updateVlanTestDevices();
+          }
+          
+          modal.remove();
+          this.showLinkAlert(`Configuración de ${newId} aplicada exitosamente`, 'success');
+      }
+
+      // Mode toggle functionality
+      toggleDeleteMode(simulatorType) {
+          const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+          const buttonId = simulatorType === 'routing' ? 'deleteMode' : 'deleteVlanMode';
+          const button = document.getElementById(buttonId);
+          
+          simulator.deleteMode = !simulator.deleteMode;
+          simulator.editMode = false; // Disable edit mode
+          
+          if (simulator.deleteMode) {
+              button.classList.add('active');
+              button.textContent = '❌ Cancelar Eliminar';
+              this.showLinkAlert('Modo eliminar activado. Haga clic en dispositivos o enlaces para eliminarlos.', 'warning');
+          } else {
+              button.classList.remove('active');
+              button.textContent = '🗑️ Modo Eliminar';
+              this.showLinkAlert('Modo eliminar desactivado.', 'info');
+          }
+          
+          // Update edit button
+          const editButtonId = simulatorType === 'routing' ? 'editMode' : 'editVlanMode';
+          const editButton = document.getElementById(editButtonId);
+          if (editButton) {
+              editButton.classList.remove('active');
+              editButton.textContent = '✏️ Modo Editar';
+          }
+      }
+
+      toggleEditMode(simulatorType) {
+          const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+          const buttonId = simulatorType === 'routing' ? 'editMode' : 'editVlanMode';
+          const button = document.getElementById(buttonId);
+          
+          simulator.editMode = !simulator.editMode;
+          simulator.deleteMode = false; // Disable delete mode
+          
+          if (simulator.editMode) {
+              button.classList.add('active');
+              button.textContent = '📝 Cancelar Editar';
+              this.showLinkAlert('Modo editar activado. Haga clic en dispositivos para editarlos.', 'info');
+          } else {
+              button.classList.remove('active');
+              button.textContent = '✏️ Modo Editar';
+              this.showLinkAlert('Modo editar desactivado.', 'info');
+          }
+          
+          // Update delete button
+          const deleteButtonId = simulatorType === 'routing' ? 'deleteMode' : 'deleteVlanMode';
+          const deleteButton = document.getElementById(deleteButtonId);
+          if (deleteButton) {
+              deleteButton.classList.remove('active');
+              deleteButton.textContent = '🗑️ Modo Eliminar';
+          }
+      }
+
+      // Handle click events for delete and edit modes
+       handleDeleteClick(event, simulatorType) {
+           const svg = simulatorType === 'routing' ? document.getElementById('topologySvg') : document.getElementById('vlanSvg');
+           const rect = svg.getBoundingClientRect();
+           const x = event.clientX - rect.left;
+           const y = event.clientY - rect.top;
+           
+           const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+           
+           // Find clicked device
+           const clickedDevice = simulator.devices.find(d => 
+               Math.abs(d.x - x) < 30 && Math.abs(d.y - y) < 30
+           );
+           
+           // Find clicked link
+           const clickedLink = this.findClickedLink(x, y, simulator);
+           
+           if (clickedDevice) {
+               this.deleteDevice(clickedDevice.id, simulatorType);
+           } else if (clickedLink) {
+               this.deleteLink(clickedLink.id, simulatorType);
+           } else {
+               this.showLinkAlert('Haga clic en un dispositivo o enlace para eliminarlo', 'info');
+           }
+       }
+
+       handleEditClick(event, simulatorType) {
+           const svg = simulatorType === 'routing' ? document.getElementById('topologySvg') : document.getElementById('vlanSvg');
+           const rect = svg.getBoundingClientRect();
+           const x = event.clientX - rect.left;
+           const y = event.clientY - rect.top;
+           
+           const simulator = simulatorType === 'routing' ? this.routingSimulator : this.vlanSimulator;
+           
+           // Find clicked device
+           const clickedDevice = simulator.devices.find(d => 
+               Math.abs(d.x - x) < 30 && Math.abs(d.y - y) < 30
+           );
+           
+           // Find clicked link
+           const clickedLink = this.findClickedLink(x, y, simulator);
+           
+           if (clickedDevice) {
+               this.editDevice(clickedDevice.id, simulatorType);
+           } else if (clickedLink) {
+               this.editLink(clickedLink.id, simulatorType);
+           } else {
+               this.showLinkAlert('Haga clic en un dispositivo o enlace para editarlo', 'info');
+           }
+       }
+
+       switchConfigTab(tabName, modal) {
+            // Update tab buttons
+            modal.querySelectorAll('.config-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            modal.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            
+            // Update content panels
+            modal.querySelectorAll('.config-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            const targetPanel = modal.querySelector(`#${tabName}Panel`);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+        }
+
+        addNewInterface(device, modal) {
+            const container = modal.querySelector('#interfacesContainer');
+            const interfaceCount = device.interfaces ? device.interfaces.length : 0;
+            const newInterfaceName = `Fa${Math.floor(interfaceCount / 2)}/${interfaceCount % 2}`;
+            
+            const newInterfaceRow = document.createElement('div');
+            newInterfaceRow.className = 'interface-row';
+            newInterfaceRow.innerHTML = `
+                <div class="interface-header">
+                    <span class="interface-name">${newInterfaceName}</span>
+                    <button type="button" class="btn btn--sm btn--outline" onclick="this.parentElement.parentElement.remove()">Eliminar</button>
+                </div>
+                <div class="interface-fields">
+                    <input type="text" placeholder="Dirección IP" value="" class="form-control interface-ip" data-interface="${interfaceCount}">
+                    <input type="text" placeholder="Máscara" value="255.255.255.0" class="form-control interface-mask" data-interface="${interfaceCount}">
+                    <select class="form-control interface-status" data-interface="${interfaceCount}">
+                        <option value="up" selected>Up</option>
+                        <option value="down">Down</option>
+                    </select>
+                </div>
+            `;
+            
+            container.appendChild(newInterfaceRow);
+        }
+
+        updateBreadcrumb(text) {
+            document.getElementById('breadcrumbContent').textContent = text;
+        }
 
     markTopicVisited(trackId, moduleId, topicId) {
         if (!this.progress[trackId]) this.progress[trackId] = {};

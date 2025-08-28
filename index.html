@@ -464,6 +464,244 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
-</body>
+        <!-- Routing Simulator Modal -->
+        <div id="routingSimModal" class="modal hidden">
+            <div class="modal-content modal-content--large">
+                <div class="modal-header">
+                    <h3>🔧 Simulador de Enrutamiento</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="simulator-tabs">
+                        <button class="sim-tab active" data-tab="topology">Topología</button>
+                        <button class="sim-tab" data-tab="config">Configuración</button>
+                        <button class="sim-tab" data-tab="tables">Tablas de Enrutamiento</button>
+                        <button class="sim-tab" data-tab="simulation">Simulación</button>
+                    </div>
+
+                    <!-- Topology Tab -->
+                    <div id="topologyTab" class="sim-content active">
+                        <div class="topology-controls">
+                            <h4>🏗️ Construir Topología</h4>
+                            <div class="device-palette">
+                                <button class="device-btn" data-device="router">🔧 Router</button>
+                                <button class="device-btn" data-device="switch">🔀 Switch</button>
+                                <button class="device-btn" data-device="pc">💻 PC</button>
+                                <button class="device-btn" data-device="link">🔗 Enlace</button>
+                            </div>
+                            <div class="topology-actions">
+                                <button class="btn btn--secondary" id="clearTopology">Limpiar</button>
+                                <button class="btn btn--primary" id="loadSampleTopology">Cargar Ejemplo</button>
+                                <button class="btn btn--warning" id="deleteMode">🗑️ Modo Eliminar</button>
+                                <button class="btn btn--info" id="editMode">✏️ Modo Editar</button>
+                            </div>
+                        </div>
+                        <div class="topology-canvas" id="topologyCanvas">
+                            <svg width="100%" height="400" id="topologySvg">
+                                <!-- Topology will be drawn here -->
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Configuration Tab -->
+                    <div id="configTab" class="sim-content hidden">
+                        <div class="config-panel">
+                            <h4>⚙️ Configuración de Dispositivos</h4>
+                            <div class="device-list" id="deviceList">
+                                <p class="no-devices">Agregue dispositivos en la pestaña Topología para configurarlos</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Routing Tables Tab -->
+                    <div id="tablesTab" class="sim-content hidden">
+                        <div class="tables-panel">
+                            <h4>📊 Tablas de Enrutamiento</h4>
+                            <div class="protocol-selector">
+                                <label>Protocolo:</label>
+                                <select id="protocolSelect">
+                                    <option value="static">Rutas Estáticas</option>
+                                    <option value="rip">RIP</option>
+                                    <option value="eigrp">EIGRP</option>
+                                    <option value="ospf">OSPF</option>
+                                </select>
+                                <button class="btn btn--primary" id="updateTables">Actualizar Tablas</button>
+                            </div>
+                            <div class="routing-tables" id="routingTables">
+                                <!-- Tables will be generated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Simulation Tab -->
+                    <div id="simulationTab" class="sim-content hidden">
+                        <div class="simulation-panel">
+                            <h4>🚀 Simulación de Paquetes</h4>
+                            <div class="packet-controls">
+                                <div class="form-group">
+                                    <label>Origen:</label>
+                                    <select id="sourceDevice">
+                                        <option value="">Seleccionar dispositivo</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Destino:</label>
+                                    <input type="text" id="destinationIP" placeholder="192.168.1.1" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Tipo de Paquete:</label>
+                                    <select id="packetType">
+                                        <option value="icmp">ICMP (Ping)</option>
+                                        <option value="tcp">TCP</option>
+                                        <option value="udp">UDP</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn--primary" id="sendPacket">Enviar Paquete</button>
+                                <button class="btn btn--secondary" id="clearSimulation">Limpiar</button>
+                            </div>
+                            <div class="simulation-log" id="simulationLog">
+                                <h5>📝 Log de Simulación</h5>
+                                <div class="log-content" id="logContent">
+                                    <p class="log-empty">Envíe un paquete para ver el proceso de enrutamiento</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VLAN Simulator Modal -->
+        <div id="vlanSimModal" class="modal hidden">
+            <div class="modal-content modal-content--large">
+                <div class="modal-header">
+                    <h3>🌐 Simulador VLAN</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="simulator-tabs">
+                        <button class="sim-tab active" data-tab="vlan-topology">Topología</button>
+                        <button class="sim-tab" data-tab="vlan-config">VLANs</button>
+                        <button class="sim-tab" data-tab="trunk-config">Trunking</button>
+                        <button class="sim-tab" data-tab="inter-vlan">Inter-VLAN</button>
+                    </div>
+
+                    <!-- VLAN Topology Tab -->
+                    <div id="vlanTopologyTab" class="sim-content active">
+                        <div class="vlan-controls">
+                            <h4>🏗️ Topología VLAN</h4>
+                            <div class="vlan-palette">
+                                 <button class="device-btn" data-device="switch">🔀 Switch</button>
+                                 <button class="device-btn" data-device="router">🔧 Router</button>
+                                 <button class="device-btn" data-device="pc">💻 PC</button>
+                                 <button class="device-btn" data-device="server">🖥️ Servidor</button>
+                                 <button class="device-btn" data-device="link">🔗 Enlace</button>
+                             </div>
+                            <div class="vlan-actions">
+                                <button class="btn btn--secondary" id="clearVlanTopology">Limpiar</button>
+                                <button class="btn btn--primary" id="loadVlanExample">Cargar Ejemplo VLAN</button>
+                                <button class="btn btn--warning" id="deleteVlanMode">🗑️ Modo Eliminar</button>
+                                <button class="btn btn--info" id="editVlanMode">✏️ Modo Editar</button>
+                            </div>
+                        </div>
+                        <div class="vlan-canvas" id="vlanCanvas">
+                            <svg width="100%" height="400" id="vlanSvg">
+                                <!-- VLAN topology will be drawn here -->
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- VLAN Configuration Tab -->
+                    <div id="vlanConfigTab" class="sim-content hidden">
+                        <div class="vlan-config-panel">
+                            <h4>🏷️ Configuración de VLANs</h4>
+                            <div class="vlan-creator">
+                                <div class="form-row">
+                                    <input type="number" id="vlanId" placeholder="VLAN ID" min="1" max="4094" class="form-control">
+                                    <input type="text" id="vlanName" placeholder="Nombre VLAN" class="form-control">
+                                    <input type="color" id="vlanColor" value="#3b82f6" class="color-picker">
+                                    <button class="btn btn--primary" id="createVlan">Crear VLAN</button>
+                                </div>
+                            </div>
+                            <div class="vlan-list" id="vlanList">
+                                <h5>VLANs Configuradas</h5>
+                                <div class="vlan-items" id="vlanItems">
+                                    <!-- VLANs will be listed here -->
+                                </div>
+                            </div>
+                            <div class="port-assignment">
+                                <h5>Asignación de Puertos</h5>
+                                <div class="port-config" id="portConfig">
+                                    <!-- Port assignments will be shown here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trunking Tab -->
+                    <div id="trunkConfigTab" class="sim-content hidden">
+                        <div class="trunk-panel">
+                            <h4>🔗 Configuración de Trunking</h4>
+                            <div class="trunk-config">
+                                <div class="trunk-links" id="trunkLinks">
+                                    <!-- Trunk configurations will be shown here -->
+                                </div>
+                                <div class="trunk-settings">
+                                    <h5>Configuración 802.1Q</h5>
+                                    <div class="form-group">
+                                        <label>VLAN Nativa:</label>
+                                        <select id="nativeVlan" class="form-control">
+                                            <option value="1">VLAN 1 (Default)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>VLANs Permitidas:</label>
+                                        <input type="text" id="allowedVlans" placeholder="1,10,20,30" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inter-VLAN Tab -->
+                    <div id="interVlanTab" class="sim-content hidden">
+                        <div class="inter-vlan-panel">
+                            <h4>🔄 Enrutamiento Inter-VLAN</h4>
+                            <div class="routing-method">
+                                <h5>Método de Enrutamiento</h5>
+                                <div class="method-selector">
+                                    <label><input type="radio" name="routingMethod" value="router-on-stick" checked> Router-on-a-Stick</label>
+                                    <label><input type="radio" name="routingMethod" value="layer3-switch"> Switch Multicapa</label>
+                                    <label><input type="radio" name="routingMethod" value="external-router"> Router Externo</label>
+                                </div>
+                            </div>
+                            <div class="svi-config" id="sviConfig">
+                                <h5>Configuración SVI</h5>
+                                <div class="svi-list" id="sviList">
+                                    <!-- SVI configurations will be shown here -->
+                                </div>
+                            </div>
+                            <div class="connectivity-test">
+                                <h5>Prueba de Conectividad</h5>
+                                <div class="test-controls">
+                                    <select id="testSource" class="form-control">
+                                        <option value="">Dispositivo Origen</option>
+                                    </select>
+                                    <select id="testDestination" class="form-control">
+                                        <option value="">Dispositivo Destino</option>
+                                    </select>
+                                    <button class="btn btn--primary" id="testConnectivity">Probar Conectividad</button>
+                                </div>
+                                <div class="test-results" id="testResults">
+                                    <!-- Test results will be shown here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="app.js"></script>
+    </body>
 </html>
